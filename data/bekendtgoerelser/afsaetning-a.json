@@ -1,0 +1,91 @@
+{
+  "fag": "Afsætning A",
+  "bekendtgoerelse": "BEK nr. 183 af 2021",
+  "kilde": "Undervisningsministeriet / retsinformation.dk",
+  "niveauer": ["GF2", "HF1", "HF2"],
+  "formaal": "Eleverne skal opnå kompetencer til at analysere og vurdere afsætningsøkonomiske problemstillinger samt planlægge, gennemføre og evaluere afsætningsaktiviteter i virksomheder.",
+  "kompetencemaal": [
+    {
+      "id": "K1",
+      "maal": "Anvende og vurdere afsætningsøkonomiske modeller og metoder til analyse af virksomhedens situation",
+      "niveau": ["GF2", "HF1", "HF2"]
+    },
+    {
+      "id": "K2",
+      "maal": "Analysere forbrugeradfærd og segmentere markeder med henblik på at identificere målgrupper",
+      "niveau": ["GF2", "HF1", "HF2"]
+    },
+    {
+      "id": "K3",
+      "maal": "Planlægge og gennemføre markedsanalyser og vurdere resultaternes anvendelighed",
+      "niveau": ["HF1", "HF2"]
+    },
+    {
+      "id": "K4",
+      "maal": "Udvikle og vurdere afsætningsstrategier og marketingmix tilpasset virksomhedens målgruppe og situation",
+      "niveau": ["HF1", "HF2"]
+    },
+    {
+      "id": "K5",
+      "maal": "Anvende digitale medier og platforme i afsætningsarbejdet og vurdere deres effektivitet",
+      "niveau": ["GF2", "HF1", "HF2"]
+    },
+    {
+      "id": "K6",
+      "maal": "Vurdere internationale afsætningsmuligheder og udfordringer for danske virksomheder",
+      "niveau": ["HF2"]
+    }
+  ],
+  "kernestoef": [
+    {
+      "emne": "Markedsanalyse",
+      "indhold": ["Primær og sekundær dataindsamling", "Kvantitative og kvalitative metoder", "Spørgeskemadesign", "Databehandling og præsentation"]
+    },
+    {
+      "emne": "Forbrugeradfærd og segmentering",
+      "indhold": ["Kotlers købsprocessmodel", "Segmenteringsvariable (demografisk, psykografisk, adfærdsmæssig, geografisk)", "Målgruppeanalyse", "Positionering"]
+    },
+    {
+      "emne": "Konkurrentanalyse",
+      "indhold": ["SWOT-analyse", "Porters Five Forces (grundlæggende)", "Konkurrentkortlægning", "Benchmarking"]
+    },
+    {
+      "emne": "Marketingmix",
+      "indhold": ["Produkt og produktudvikling", "Prissætning og prisstrategier", "Distribution og salgskanaler", "Kommunikation og reklame"]
+    },
+    {
+      "emne": "Digital markedsføring",
+      "indhold": ["Sociale medier og platforme", "Content marketing", "SEO grundlæggende", "Målrettet annoncering"]
+    },
+    {
+      "emne": "Afsætningsstrategi",
+      "indhold": ["Vækststrategier (Ansoff-matrix)", "Differentiering og niche", "International afsætning", "Branding og varemærke"]
+    }
+  ],
+  "bedoemmelseskriterier": {
+    "bestaaet": "Eleven kan selvstændigt anvende centrale afsætningsøkonomiske modeller og begreber på virkelighedsnære problemstillinger og begrunde sine valg.",
+    "hoej_grad": "Eleven kan analysere komplekse afsætningssituationer, vurdere løsningsmuligheder kritisk og perspektivere til aktuelle erhvervsmæssige forhold."
+  },
+  "anbefalede_cases_2025_2026": [
+    {
+      "virksomhed": "MENY",
+      "relevans": "Supermarkedskæde der arbejder aktivt med segmentering, loyalitetsprogrammer og digital markedsføring mod lokale målgrupper"
+    },
+    {
+      "virksomhed": "Arla Foods",
+      "relevans": "Dansk mejerivirksomhed med stærk branding, international afsætning og dokumenteret arbejde med bæredygtighed som konkurrenceparameter"
+    },
+    {
+      "virksomhed": "Zalando",
+      "relevans": "E-handelsplatform der illustrerer digital markedsføring, datadriven segmentering og moderne distributionskanaler"
+    },
+    {
+      "virksomhed": "Joe & The Juice",
+      "relevans": "Dansk virksomhed med stærk brandidentitet, tydelig målgruppe og vækststrategi via international ekspansion"
+    },
+    {
+      "virksomhed": "Aldi Danmark",
+      "relevans": "Illustrerer prispositionering, discountstrategi og konkurrence i det danske dagligvaremarked"
+    }
+  ]
+}
