@@ -23,9 +23,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { navn, skole }
-      }
+      options: { data: { navn, skole } }
     })
 
     if (error) {
@@ -42,17 +40,24 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-md">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            <span className="text-blue-600">Edufino</span>
-          </h1>
-          <p className="text-gray-500 mt-1">Opret din konto</p>
+          <div className="flex items-center gap-2.5 mb-1">
+            <svg width="32" height="32" viewBox="0 0 30 30" fill="none">
+              <rect width="30" height="30" rx="8" fill="#F97316"/>
+              <polygon points="15,8 24,13 15,18 6,13" fill="white"/>
+              <path d="M15 18v8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M9 15.5v6" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              <circle cx="9" cy="22.5" r="2.2" fill="white"/>
+            </svg>
+            <h1 className="text-2xl font-bold tracking-normal">
+              <span className="text-blue-900">DIDANTO</span><span style={{ marginLeft: '6px', color: '#F97316' }}>.</span>
+            </h1>
+          </div>
+          <p className="text-gray-500 mt-2">Opret din konto</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Navn
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Navn</label>
             <input
               type="text"
               value={navn}
@@ -62,11 +67,8 @@ export default function SignupPage() {
               required
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Skole
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Skole</label>
             <input
               type="text"
               value={skole}
@@ -76,11 +78,8 @@ export default function SignupPage() {
               required
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               value={email}
@@ -90,11 +89,8 @@ export default function SignupPage() {
               required
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Adgangskode
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Adgangskode</label>
             <input
               type="password"
               value={password}
@@ -105,15 +101,11 @@ export default function SignupPage() {
               minLength={6}
             />
           </div>
-
-          {error && (
-            <p className="text-red-500 text-sm">{error}</p>
-          )}
-
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-blue-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-800 disabled:opacity-50"
           >
             {loading ? 'Opretter konto...' : 'Opret konto'}
           </button>
@@ -121,9 +113,7 @@ export default function SignupPage() {
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Har du allerede en konto?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Log ind
-          </Link>
+          <Link href="/login" className="text-orange-500 hover:underline">Log ind</Link>
         </p>
       </div>
     </div>
