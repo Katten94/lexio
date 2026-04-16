@@ -1,12 +1,31 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
-const kurser = [
-  { id: 1, titel: "Markedsanalyse og forbrugeradfærd", fag: "Afsætning A", niveau: "GF2 · HF1", moduler: 6, varighed: "2,5 timer", farve: "blue" },
-  { id: 2, titel: "Salgspsykologi og kundehåndtering", fag: "Salg og service", niveau: "HF1", moduler: 5, varighed: "2 timer", farve: "teal" },
-  { id: 3, titel: "Budgettering og regnskabsforståelse", fag: "Erhvervsøkonomi B", niveau: "GF2", moduler: 5, varighed: "2 timer", farve: "green" },
-  { id: 4, titel: "Digital kommunikation og branding", fag: "Kommunikation", niveau: "GF2", moduler: 4, varighed: "1,5 timer", farve: "purple" },
-  { id: 5, titel: "AI i den merkantile undervisning", fag: "Didaktik", niveau: "Alle niveauer", moduler: 4, varighed: "1,5 timer", farve: "amber" },
+const ALLE_KURSER = [
+  { id: 1, titel: "Markedsanalyse og forbrugeradfærd", fag: "Afsætning", niveau: ["A", "B"], forloeb: ["gf2", "hf1", "hf2"], farve: "blue", varighed: "2,5 timer", moduler: 6 },
+  { id: 2, titel: "Prissætning og prisstrategi", fag: "Afsætning", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], farve: "blue", varighed: "2 timer", moduler: 5 },
+  { id: 3, titel: "Digital markedsføring i praksis", fag: "Afsætning", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], farve: "blue", varighed: "2 timer", moduler: 5 },
+  { id: 4, titel: "Salgspsykologi og kundehåndtering", fag: "Salg og service", niveau: ["GF2", "HF1", "HF2"], forloeb: ["gf2", "hf1", "hf2"], farve: "teal", varighed: "2 timer", moduler: 5 },
+  { id: 5, titel: "Reklamation og svær kundedialog", fag: "Salg og service", niveau: ["HF1", "HF2"], forloeb: ["hf1", "hf2"], farve: "teal", varighed: "1,5 timer", moduler: 4 },
+  { id: 6, titel: "Digitalt salg og e-handel", fag: "Salg og service", niveau: ["GF2", "HF1"], forloeb: ["gf2", "hf1"], farve: "teal", varighed: "1,5 timer", moduler: 4 },
+  { id: 7, titel: "Budgettering og regnskabsforståelse", fag: "Erhvervsøkonomi", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1"], farve: "green", varighed: "2 timer", moduler: 5 },
+  { id: 8, titel: "Investeringsteori og finansiering", fag: "Erhvervsøkonomi", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], farve: "green", varighed: "2 timer", moduler: 5 },
+  { id: 9, titel: "Nøgletal og virksomhedsanalyse", fag: "Erhvervsøkonomi", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], farve: "green", varighed: "1,5 timer", moduler: 4 },
+  { id: 10, titel: "Digital kommunikation og branding", fag: "Kommunikation", niveau: ["GF2", "HF1", "HF2"], forloeb: ["gf2", "hf1", "hf2"], farve: "purple", varighed: "1,5 timer", moduler: 4 },
+  { id: 11, titel: "Målgruppe og kanalvalg", fag: "Kommunikation", niveau: ["GF2", "HF1"], forloeb: ["gf2", "hf1"], farve: "purple", varighed: "1,5 timer", moduler: 4 },
+  { id: 12, titel: "Krisekommunikation og mediehåndtering", fag: "Kommunikation", niveau: ["HF1", "HF2"], forloeb: ["hf1", "hf2"], farve: "purple", varighed: "2 timer", moduler: 5 },
+  { id: 13, titel: "Funktioner og grafer i erhvervskontekst", fag: "Matematik", niveau: ["C", "B"], forloeb: ["gf2", "hf1"], farve: "amber", varighed: "2 timer", moduler: 5 },
+  { id: 14, titel: "Statistik og sandsynlighedsregning", fag: "Matematik", niveau: ["C", "B"], forloeb: ["hf1", "hf2"], farve: "amber", varighed: "2 timer", moduler: 5 },
+  { id: 15, titel: "Procentregning og finansiel matematik", fag: "Matematik", niveau: ["D", "E", "F"], forloeb: ["gf1", "gf2"], farve: "amber", varighed: "1,5 timer", moduler: 4 },
+  { id: 16, titel: "Mundtlig kommunikation og præsentation", fag: "Dansk", niveau: ["C", "D"], forloeb: ["gf2", "hf1"], farve: "coral", varighed: "1,5 timer", moduler: 4 },
+  { id: 17, titel: "Skriftlig fremstilling til erhvervslivet", fag: "Dansk", niveau: ["C", "D", "E"], forloeb: ["gf1", "gf2"], farve: "coral", varighed: "2 timer", moduler: 5 },
+  { id: 18, titel: "Business English — præsentation og forhandling", fag: "Engelsk", niveau: ["C", "B"], forloeb: ["hf1", "hf2"], farve: "indigo", varighed: "2 timer", moduler: 5 },
+  { id: 19, titel: "Engelsk til daglig erhvervskommunikation", fag: "Engelsk", niveau: ["D", "E"], forloeb: ["gf2", "hf1"], farve: "indigo", varighed: "1,5 timer", moduler: 4 },
+  { id: 20, titel: "Databaser og datamodellering", fag: "Informatik", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], farve: "sky", varighed: "2 timer", moduler: 5 },
+  { id: 21, titel: "Programmering og algoritmer i undervisningen", fag: "Informatik", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], farve: "sky", varighed: "2 timer", moduler: 5 },
+  { id: 22, titel: "AI i den merkantile undervisning", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], farve: "rose", varighed: "1,5 timer", moduler: 4 },
+  { id: 23, titel: "Differentieret undervisning på EUD", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], farve: "rose", varighed: "1,5 timer", moduler: 4 },
+  { id: 24, titel: "Feedback og evaluering i erhvervsuddannelsen", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], farve: "rose", varighed: "1,5 timer", moduler: 4 },
 ]
 
 const farveKlasser: Record<string, { badge: string; badgeText: string }> = {
@@ -15,6 +34,10 @@ const farveKlasser: Record<string, { badge: string; badgeText: string }> = {
   green:  { badge: "bg-green-100",  badgeText: "text-green-700" },
   purple: { badge: "bg-purple-100", badgeText: "text-purple-700" },
   amber:  { badge: "bg-amber-100",  badgeText: "text-amber-700" },
+  coral:  { badge: "bg-orange-100", badgeText: "text-orange-700" },
+  indigo: { badge: "bg-indigo-100", badgeText: "text-indigo-700" },
+  sky:    { badge: "bg-sky-100",    badgeText: "text-sky-700" },
+  rose:   { badge: "bg-rose-100",   badgeText: "text-rose-700" },
 }
 
 const Logo = () => (
@@ -37,7 +60,24 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) { redirect('/login') }
 
-  const initialer = user.email?.slice(0, 2).toUpperCase() ?? '??'
+  const fagprofil: Record<string, string[]> = user.user_metadata?.fagprofil || {}
+  const forloeb: string[] = user.user_metadata?.forloeb || []
+  const navn = user.user_metadata?.navn || ''
+  const initialer = navn
+    ? navn.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user.email?.slice(0, 2).toUpperCase() ?? '??'
+
+  const harProfil = Object.keys(fagprofil).length > 0 && forloeb.length > 0
+
+  const relevantekurser = ALLE_KURSER.filter(kursus => {
+    if (!harProfil) return true
+    const brugerNiveauer = fagprofil[kursus.fag] || []
+    const fagMatch = brugerNiveauer.some(n =>
+      kursus.niveau.includes(n) || kursus.niveau.includes("Alle niveauer")
+    )
+    const forloebMatch = forloeb.some(f => kursus.forloeb.includes(f))
+    return fagMatch && forloebMatch
+  })
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -56,22 +96,44 @@ export default async function DashboardPage() {
           <a href="/kompetencer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
             <span>📜</span> Mine beviser
           </a>
+          <a href="/profil" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
+            <span>👤</span> Min profil
+          </a>
         </nav>
         <div className="px-3 py-4 border-t border-gray-100">
           <div className="flex items-center gap-2.5 px-3 py-2">
             <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-semibold text-orange-600">
               {initialer}
             </div>
-            <p className="text-xs text-gray-600 truncate">{user.email}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-700 truncate">{navn || user.email}</p>
+              <p className="text-xs text-gray-400 truncate">{user.email}</p>
+            </div>
           </div>
         </div>
       </aside>
 
       <main className="flex-1 ml-56 px-8 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900">God dag 👋</h2>
-          <p className="text-gray-500 mt-1">Her er din faglige udvikling på <span className="font-bold text-blue-900">DIDANTO</span><span style={{ marginLeft: '3px', color: '#F97316' }}>.</span></p>
+          <h2 className="text-2xl font-semibold text-gray-900">
+            God dag{navn ? `, ${navn.split(' ')[0]}` : ''} 👋
+          </h2>
+          <p className="text-gray-500 mt-1">
+            Her er din faglige udvikling på <span className="font-bold text-blue-900">DIDANTO</span><span style={{ marginLeft: '3px', color: '#F97316' }}>.</span>
+          </p>
         </div>
+
+        {!harProfil && (
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-orange-800">Din fagprofil er ikke komplet</p>
+              <p className="text-xs text-orange-600 mt-0.5">Opdater din profil så vi kan vise dig de rigtige kurser</p>
+            </div>
+            <a href="/profil" className="text-xs font-medium text-orange-700 bg-orange-100 px-3 py-1.5 rounded-lg hover:bg-orange-200">
+              Opdater profil →
+            </a>
+          </div>
+        )}
 
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -92,12 +154,24 @@ export default async function DashboardPage() {
         </div>
 
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Tilgængelige kurser</h3>
-          <span className="text-sm text-gray-400">{kurser.length} kurser</span>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {harProfil ? 'Kurser for dig' : 'Alle kurser'}
+          </h3>
+          <span className="text-sm text-gray-400">{relevantekurser.length} kurser</span>
         </div>
 
+        {relevantekurser.length === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+            <p className="text-gray-500 text-sm mb-2">Ingen kurser matcher din fagprofil endnu</p>
+            <p className="text-xs text-gray-400 mb-4">Vi tilføjer løbende nye kurser</p>
+            <a href="/profil" className="text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100">
+              Tilpas din fagprofil →
+            </a>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
-          {kurser.map((kursus) => {
+          {relevantekurser.map((kursus) => {
             const f = farveKlasser[kursus.farve]
             return (
               <a key={kursus.id} href={`/kurser/${kursus.id}`}>
@@ -109,7 +183,9 @@ export default async function DashboardPage() {
                     <span className="text-xs text-gray-400">{kursus.varighed}</span>
                   </div>
                   <h4 className="font-medium text-gray-900 mb-1 leading-snug">{kursus.titel}</h4>
-                  <p className="text-xs text-gray-400 mb-4">{kursus.niveau} · {kursus.moduler} moduler</p>
+                  <p className="text-xs text-gray-400 mb-4">
+                    {kursus.niveau.join(' · ')} · {kursus.moduler} moduler
+                  </p>
                   <div className="flex items-center justify-between">
                     <div className="flex-1 bg-gray-100 rounded-full h-1.5 mr-3">
                       <div className="bg-orange-400 h-1.5 rounded-full" style={{ width: '0%' }}></div>
