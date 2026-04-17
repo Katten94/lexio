@@ -1,94 +1,74 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Sidebar from '@/components/Sidebar'
 
 const ALLE_KURSER = [
-  { id: 1, titel: "Markedsanalyse og forbrugeradfærd", fag: "Afsætning", niveau: ["A", "B"], forloeb: ["gf2", "hf1", "hf2"], farve: "blue", varighed: "2,5 timer", moduler: 6, udgivet: "2026-04-14" },
-  { id: 2, titel: "Prissætning og prisstrategi", fag: "Afsætning", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], farve: "blue", varighed: "2 timer", moduler: 5, udgivet: "2026-04-07" },
-  { id: 3, titel: "Digital markedsføring i praksis", fag: "Afsætning", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], farve: "blue", varighed: "2 timer", moduler: 5, udgivet: "2026-03-31" },
-  { id: 4, titel: "Salgspsykologi og kundehåndtering", fag: "Salg og service", niveau: ["GF2", "HF1", "HF2"], forloeb: ["gf2", "hf1", "hf2"], farve: "teal", varighed: "2 timer", moduler: 5, udgivet: "2026-04-14" },
-  { id: 5, titel: "Reklamation og svær kundedialog", fag: "Salg og service", niveau: ["HF1", "HF2"], forloeb: ["hf1", "hf2"], farve: "teal", varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-07" },
-  { id: 6, titel: "Digitalt salg og e-handel", fag: "Salg og service", niveau: ["GF2", "HF1"], forloeb: ["gf2", "hf1"], farve: "teal", varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-31" },
-  { id: 7, titel: "Budgettering og regnskabsforståelse", fag: "Erhvervsøkonomi", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1"], farve: "green", varighed: "2 timer", moduler: 5, udgivet: "2026-04-14" },
-  { id: 8, titel: "Investeringsteori og finansiering", fag: "Erhvervsøkonomi", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], farve: "green", varighed: "2 timer", moduler: 5, udgivet: "2026-04-07" },
-  { id: 9, titel: "Nøgletal og virksomhedsanalyse", fag: "Erhvervsøkonomi", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], farve: "green", varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-31" },
-  { id: 10, titel: "Digital kommunikation og branding", fag: "Kommunikation", niveau: ["GF2", "HF1", "HF2"], forloeb: ["gf2", "hf1", "hf2"], farve: "purple", varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-14" },
-  { id: 11, titel: "Målgruppe og kanalvalg", fag: "Kommunikation", niveau: ["GF2", "HF1"], forloeb: ["gf2", "hf1"], farve: "purple", varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-07" },
-  { id: 12, titel: "Krisekommunikation og mediehåndtering", fag: "Kommunikation", niveau: ["HF1", "HF2"], forloeb: ["hf1", "hf2"], farve: "purple", varighed: "2 timer", moduler: 5, udgivet: "2026-03-31" },
-  { id: 13, titel: "Funktioner og grafer i erhvervskontekst", fag: "Matematik", niveau: ["C", "B"], forloeb: ["gf2", "hf1"], farve: "amber", varighed: "2 timer", moduler: 5, udgivet: "2026-03-24" },
-  { id: 14, titel: "Statistik og sandsynlighedsregning", fag: "Matematik", niveau: ["C", "B"], forloeb: ["hf1", "hf2"], farve: "amber", varighed: "2 timer", moduler: 5, udgivet: "2026-03-17" },
-  { id: 15, titel: "Procentregning og finansiel matematik", fag: "Matematik", niveau: ["D", "E", "F"], forloeb: ["gf1", "gf2"], farve: "amber", varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-10" },
-  { id: 16, titel: "Mundtlig kommunikation og præsentation", fag: "Dansk", niveau: ["C", "D"], forloeb: ["gf2", "hf1"], farve: "coral", varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-24" },
-  { id: 17, titel: "Skriftlig fremstilling til erhvervslivet", fag: "Dansk", niveau: ["C", "D", "E"], forloeb: ["gf1", "gf2"], farve: "coral", varighed: "2 timer", moduler: 5, udgivet: "2026-03-17" },
-  { id: 18, titel: "Business English — præsentation og forhandling", fag: "Engelsk", niveau: ["C", "B"], forloeb: ["hf1", "hf2"], farve: "indigo", varighed: "2 timer", moduler: 5, udgivet: "2026-03-10" },
-  { id: 19, titel: "Engelsk til daglig erhvervskommunikation", fag: "Engelsk", niveau: ["D", "E"], forloeb: ["gf2", "hf1"], farve: "indigo", varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-03" },
-  { id: 20, titel: "Databaser og datamodellering", fag: "Informatik", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], farve: "sky", varighed: "2 timer", moduler: 5, udgivet: "2026-03-03" },
-  { id: 21, titel: "Programmering og algoritmer i undervisningen", fag: "Informatik", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], farve: "sky", varighed: "2 timer", moduler: 5, udgivet: "2026-02-24" },
-  { id: 22, titel: "AI i den merkantile undervisning", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], farve: "rose", varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-14" },
-  { id: 23, titel: "Differentieret undervisning på EUD", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], farve: "rose", varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-07" },
-  { id: 24, titel: "Feedback og evaluering i erhvervsuddannelsen", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], farve: "rose", varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-31" },
+  { id: 1, titel: "Markedsanalyse og forbrugeradfærd", fag: "Afsætning", niveau: ["A", "B"], forloeb: ["gf2", "hf1", "hf2"], varighed: "2,5 timer", moduler: 6, udgivet: "2026-04-14" },
+  { id: 2, titel: "Prissætning og prisstrategi", fag: "Afsætning", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-04-07" },
+  { id: 3, titel: "Digital markedsføring i praksis", fag: "Afsætning", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-03-31" },
+  { id: 4, titel: "Salgspsykologi og kundehåndtering", fag: "Salg og service", niveau: ["GF2", "HF1", "HF2"], forloeb: ["gf2", "hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-04-14" },
+  { id: 5, titel: "Reklamation og svær kundedialog", fag: "Salg og service", niveau: ["HF1", "HF2"], forloeb: ["hf1", "hf2"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-07" },
+  { id: 6, titel: "Digitalt salg og e-handel", fag: "Salg og service", niveau: ["GF2", "HF1"], forloeb: ["gf2", "hf1"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-31" },
+  { id: 7, titel: "Budgettering og regnskabsforståelse", fag: "Erhvervsøkonomi", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1"], varighed: "2 timer", moduler: 5, udgivet: "2026-04-14" },
+  { id: 8, titel: "Investeringsteori og finansiering", fag: "Erhvervsøkonomi", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-04-07" },
+  { id: 9, titel: "Nøgletal og virksomhedsanalyse", fag: "Erhvervsøkonomi", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-31" },
+  { id: 10, titel: "Digital kommunikation og branding", fag: "Kommunikation", niveau: ["GF2", "HF1", "HF2"], forloeb: ["gf2", "hf1", "hf2"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-14" },
+  { id: 11, titel: "Målgruppe og kanalvalg", fag: "Kommunikation", niveau: ["GF2", "HF1"], forloeb: ["gf2", "hf1"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-07" },
+  { id: 12, titel: "Krisekommunikation og mediehåndtering", fag: "Kommunikation", niveau: ["HF1", "HF2"], forloeb: ["hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-03-31" },
+  { id: 13, titel: "Funktioner og grafer i erhvervskontekst", fag: "Matematik", niveau: ["C", "B"], forloeb: ["gf2", "hf1"], varighed: "2 timer", moduler: 5, udgivet: "2026-03-24" },
+  { id: 14, titel: "Statistik og sandsynlighedsregning", fag: "Matematik", niveau: ["C", "B"], forloeb: ["hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-03-17" },
+  { id: 15, titel: "Procentregning og finansiel matematik", fag: "Matematik", niveau: ["D", "E", "F"], forloeb: ["gf1", "gf2"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-10" },
+  { id: 16, titel: "Mundtlig kommunikation og præsentation", fag: "Dansk", niveau: ["C", "D"], forloeb: ["gf2", "hf1"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-24" },
+  { id: 17, titel: "Skriftlig fremstilling til erhvervslivet", fag: "Dansk", niveau: ["C", "D", "E"], forloeb: ["gf1", "gf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-03-17" },
+  { id: 18, titel: "Business English — præsentation og forhandling", fag: "Engelsk", niveau: ["C", "B"], forloeb: ["hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-03-10" },
+  { id: 19, titel: "Engelsk til daglig erhvervskommunikation", fag: "Engelsk", niveau: ["D", "E"], forloeb: ["gf2", "hf1"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-03" },
+  { id: 20, titel: "Databaser og datamodellering", fag: "Informatik", niveau: ["A", "B"], forloeb: ["hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-03-03" },
+  { id: 21, titel: "Programmering og algoritmer i undervisningen", fag: "Informatik", niveau: ["A", "B", "C"], forloeb: ["gf2", "hf1", "hf2"], varighed: "2 timer", moduler: 5, udgivet: "2026-02-24" },
+  { id: 22, titel: "AI i den merkantile undervisning", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-14" },
+  { id: 23, titel: "Differentieret undervisning på EUD", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-04-07" },
+  { id: 24, titel: "Feedback og evaluering i erhvervsuddannelsen", fag: "Didaktik / Pædagogik", niveau: ["Alle niveauer"], forloeb: ["gf1", "gf2", "hf1", "hf2", "hf3", "hf4"], varighed: "1,5 timer", moduler: 4, udgivet: "2026-03-31" },
 ]
 
-const farveKlasser: Record<string, { badge: string; badgeText: string }> = {
-  blue:   { badge: "bg-blue-100",   badgeText: "text-blue-700" },
-  teal:   { badge: "bg-teal-100",   badgeText: "text-teal-700" },
-  green:  { badge: "bg-green-100",  badgeText: "text-green-700" },
-  purple: { badge: "bg-purple-100", badgeText: "text-purple-700" },
-  amber:  { badge: "bg-amber-100",  badgeText: "text-amber-700" },
-  coral:  { badge: "bg-orange-100", badgeText: "text-orange-700" },
-  indigo: { badge: "bg-indigo-100", badgeText: "text-indigo-700" },
-  sky:    { badge: "bg-sky-100",    badgeText: "text-sky-700" },
-  rose:   { badge: "bg-rose-100",   badgeText: "text-rose-700" },
+const FAG_STIL: Record<string, { bg: string; tekst: string }> = {
+  'Afsætning':              { bg: '#EFF6FF', tekst: '#1E40AF' },
+  'Salg og service':        { bg: '#F0FDFA', tekst: '#0F766E' },
+  'Erhvervsøkonomi':        { bg: '#F0FDF4', tekst: '#166534' },
+  'Kommunikation':          { bg: '#F5F3FF', tekst: '#5B21B6' },
+  'Matematik':              { bg: '#FFFBEB', tekst: '#92400E' },
+  'Dansk':                  { bg: '#FFF1F2', tekst: '#9F1239' },
+  'Engelsk':                { bg: '#EFF6FF', tekst: '#1E3A8A' },
+  'Informatik':             { bg: '#ECFEFF', tekst: '#164E63' },
+  'Didaktik / Pædagogik':   { bg: '#FDF4FF', tekst: '#6B21A8' },
 }
 
-const maanedNavne = ['januar', 'februar', 'marts', 'april', 'maj', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'december']
-const dagNavne = ['søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag']
+const maanedNavne = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december']
+const dagNavne = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag']
 
 function getSenesteMandag(): Date {
   const idag = new Date()
   const dag = idag.getDay()
-  const diffTilMandag = dag === 0 ? 6 : dag - 1
+  const diff = dag === 0 ? 6 : dag - 1
   const mandag = new Date(idag)
-  mandag.setDate(idag.getDate() - diffTilMandag)
+  mandag.setDate(idag.getDate() - diff)
   mandag.setHours(0, 0, 0, 0)
   return mandag
 }
 
-const Logo = () => (
-  <div className="flex items-center gap-2">
-    <svg width="26" height="26" viewBox="0 0 30 30" fill="none">
-      <rect width="30" height="30" rx="8" fill="#F97316"/>
-      <polygon points="15,8 24,13 15,18 6,13" fill="white"/>
-      <path d="M15 18v8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M9 15.5v6" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-      <circle cx="9" cy="22.5" r="2.2" fill="white"/>
-    </svg>
-    <h1 className="text-lg font-bold tracking-normal">
-      <span className="text-blue-900">DIDANTO</span><span style={{ marginLeft: '4px', color: '#F97316' }}>.</span>
-    </h1>
-  </div>
-)
-
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) { redirect('/login') }
+  if (!user) redirect('/login')
 
   const fagprofil: Record<string, string[]> = user.user_metadata?.fagprofil || {}
   const forloeb: string[] = user.user_metadata?.forloeb || []
-  const navn = user.user_metadata?.navn || ''
-  const initialer = navn
-    ? navn.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-    : user.email?.slice(0, 2).toUpperCase() ?? '??'
-
+  const navn: string = user.user_metadata?.navn || ''
   const harProfil = Object.keys(fagprofil).length > 0 && forloeb.length > 0
 
-  const relevantekurser = ALLE_KURSER.filter(kursus => {
+  const relevantekurser = ALLE_KURSER.filter(k => {
     if (!harProfil) return true
-    const brugerNiveauer = fagprofil[kursus.fag] || []
-    const fagMatch = brugerNiveauer.some(n =>
-      kursus.niveau.includes(n) || kursus.niveau.includes("Alle niveauer")
-    )
-    const forloebMatch = forloeb.some(f => kursus.forloeb.includes(f))
+    const niv = fagprofil[k.fag] || []
+    const fagMatch = niv.some(n => k.niveau.includes(n) || k.niveau.includes("Alle niveauer"))
+    const forloebMatch = forloeb.some(f => k.forloeb.includes(f))
     return fagMatch && forloebMatch
   })
 
@@ -98,137 +78,126 @@ export default async function DashboardPage() {
     .sort((a, b) => new Date(b.udgivet).getTime() - new Date(a.udgivet).getTime())
     .slice(0, 4)
 
-  const idag = new Date()
-  const datoTekst = `${dagNavne[idag.getDay()]} d. ${idag.getDate()}. ${maanedNavne[idag.getMonth()]} ${idag.getFullYear()}`
-  const mandagDato = `d. ${senesteMandag.getDate()}. ${maanedNavne[senesteMandag.getMonth()]}`
-
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col min-h-screen fixed top-0 left-0">
-        <div className="px-5 py-5 border-b border-gray-100">
-          <Logo />
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider">Menu</div>
-          <a href="/dashboard" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium">
-            <span>📊</span> Oversigt
-          </a>
-          <a href="/kurser" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-            <span>🎓</span> Kurser
-          </a>
-          <a href="/kompetencer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-            <span>📜</span> Mine beviser
-          </a>
-          <a href="/profil" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-            <span>👤</span> Min profil
-          </a>
-        </nav>
-        <div className="px-3 py-4 border-t border-gray-100">
-          <div className="flex items-center gap-2.5 px-3 py-2">
-            <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-semibold text-orange-600">
-              {initialer}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-700 truncate">{navn || user.email}</p>
-              <p className="text-xs text-gray-400 truncate">{user.email}</p>
-            </div>
-          </div>
-        </div>
-      </aside>
+    <div className="min-h-screen flex" style={{ backgroundColor: '#F9FAFB' }}>
+      <Sidebar navn={navn} email={user.email} />
 
-      <main className="flex-1 ml-56 px-8 py-8">
+      <main className="flex-1 ml-52 px-10 py-8 max-w-4xl">
 
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900">
+        {/* Header */}
+        <div className="mb-7">
+          <h1 className="font-bold" style={{ fontSize: '22px', color: '#111827', fontFamily: 'Arial' }}>
             God dag{navn ? `, ${navn.split(' ')[0]}` : ''} 👋
-          </h2>
-          <p className="text-gray-500 mt-1 capitalize">{datoTekst}</p>
+          </h1>
         </div>
 
+        {/* Profil-banner */}
         {!harProfil && (
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="rounded-lg p-4 mb-6 flex items-center justify-between"
+            style={{ backgroundColor: '#FDF9EC', border: '1px solid #F0E68C' }}>
             <div>
-              <p className="text-sm font-medium text-orange-800">Din fagprofil er ikke komplet</p>
-              <p className="text-xs text-orange-600 mt-0.5">Opdater din profil så vi kan vise dig de rigtige kurser</p>
+              <p className="text-sm font-medium" style={{ color: '#111827', fontFamily: 'Arial' }}>
+                Din fagprofil er ikke komplet
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: '#6B7280', fontFamily: 'Arial' }}>
+                Opdater din profil så vi kan vise dig de rigtige kurser
+              </p>
             </div>
-            <a href="/profil" className="text-xs font-medium text-orange-700 bg-orange-100 px-3 py-1.5 rounded-lg hover:bg-orange-200">
+            <a href="/profil" className="text-xs font-medium px-3 py-1.5 rounded-md"
+              style={{ backgroundColor: '#0F2A5E', color: 'white', fontFamily: 'Arial', textDecoration: 'none' }}>
               Opdater profil →
             </a>
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-sm text-gray-500 mb-1">Igangværende</p>
-            <p className="text-3xl font-semibold text-gray-900">0</p>
-            <p className="text-xs text-gray-400 mt-1">Start dit første kursus</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-sm text-gray-500 mb-1">Gennemført</p>
-            <p className="text-3xl font-semibold text-gray-900">0</p>
-            <p className="text-xs text-gray-400 mt-1">Ingen endnu</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-sm text-gray-500 mb-1">Tilgængelige</p>
-            <p className="text-3xl font-semibold text-gray-900">{relevantekurser.length}</p>
-            <p className="text-xs text-gray-400 mt-1">Matcher din fagprofil</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">Fortsæt hvor du slap</h3>
-          <p className="text-xs text-gray-400 mb-4">Dine igangværende forløb vises her</p>
-          <div className="text-center py-6">
-            <p className="text-gray-400 text-sm mb-3">Du har ikke startet noget endnu</p>
-            <a href="/kurser" className="inline-block bg-blue-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-800">
-              Gå til kurser →
-            </a>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold text-gray-900">Netop tilføjet</h3>
-            <a href="/kurser" className="text-xs text-blue-700 hover:underline">Se alle →</a>
-          </div>
-          <p className="text-xs text-gray-400 mb-6">{mandagDato}</p>
-
-          {ugensCurser.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-gray-400 text-sm mb-1">Intet nyt denne uge</p>
-              <p className="text-xs text-gray-400">Tjek igen mandag</p>
+        {/* Statistik */}
+        <div className="grid grid-cols-3 gap-3 mb-7">
+          {[
+            { label: 'Igangværende', value: '0', sub: 'Start dit første kursus' },
+            { label: 'Gennemført', value: '0', sub: 'Ingen endnu' },
+            { label: 'Tilgængelige', value: String(relevantekurser.length), sub: 'Matcher din fagprofil' },
+          ].map((s, i) => (
+            <div key={i} className="rounded-lg p-4"
+              style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+              <p className="text-xs mb-1.5" style={{ fontFamily: 'Arial', color: '#9CA3AF' }}>{s.label}</p>
+              <p className="font-bold" style={{ fontSize: '24px', color: '#111827', fontFamily: 'Arial' }}>{s.value}</p>
+              <p className="text-xs mt-1" style={{ fontFamily: 'Arial', color: '#9CA3AF' }}>{s.sub}</p>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {ugensCurser.map((kursus) => {
-                const f = farveKlasser[kursus.farve]
-                return (
-                  <a key={kursus.id} href={`/kurser/${kursus.id}`}>
-                    <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 hover:border-orange-200 hover:shadow-sm transition-all cursor-pointer">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`px-2.5 py-1 rounded-md text-xs font-medium ${f.badge} ${f.badgeText}`}>
-                            {kursus.fag}
-                          </div>
-                          <span className="text-xs font-medium text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">Ny</span>
-                        </div>
-                        <span className="text-xs text-gray-400">{kursus.varighed}</span>
+          ))}
+        </div>
+
+        {/* Fortsæt */}
+        <p className="font-semibold mb-2" style={{ fontSize: '13px', color: '#111827', fontFamily: 'Arial' }}>
+          Fortsæt hvor du slap
+        </p>
+        <div className="rounded-lg p-5 mb-7 text-center"
+          style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+          <p className="text-sm mb-3" style={{ fontFamily: 'Arial', color: '#9CA3AF' }}>
+            Du har ikke startet noget endnu
+          </p>
+          <a href="/kurser" className="inline-block text-xs font-medium px-4 py-2 rounded-md"
+            style={{ backgroundColor: '#0F2A5E', color: 'white', fontFamily: 'Arial', textDecoration: 'none' }}>
+            Gå til kurser →
+          </a>
+        </div>
+
+        {/* Netop tilføjet */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-semibold" style={{ fontSize: '13px', color: '#111827', fontFamily: 'Arial' }}>
+            Netop tilføjet
+          </p>
+          <a href="/kurser" className="text-xs"
+            style={{ color: '#6B7280', fontFamily: 'Arial', textDecoration: 'none' }}>
+            Se alle →
+          </a>
+        </div>
+
+        {ugensCurser.length === 0 ? (
+          <div className="rounded-lg p-6 text-center"
+            style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+            <p className="text-sm" style={{ fontFamily: 'Arial', color: '#9CA3AF' }}>
+              Intet nyt denne uge — tjek igen mandag
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {ugensCurser.map(k => {
+              const stil = FAG_STIL[k.fag] || { bg: '#F9FAFB', tekst: '#374151' }
+              return (
+                <a key={k.id} href={`/kurser/${k.id}`} style={{ textDecoration: 'none' }}>
+                  <div className="rounded-lg px-5 py-4 flex items-center justify-between"
+                    style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded"
+                          style={{ backgroundColor: stil.bg, color: stil.tekst, fontFamily: 'Arial' }}>
+                          {k.fag}
+                        </span>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded"
+                          style={{ backgroundColor: '#FDF9EC', color: '#92400E', border: '1px solid #F0E68C', fontFamily: 'Arial' }}>
+                          Ny
+                        </span>
                       </div>
-                      <h4 className="font-medium text-gray-900 mb-1 leading-snug text-sm">{kursus.titel}</h4>
-                      <p className="text-xs text-gray-400 mb-3">{kursus.niveau.join(' · ')} · {kursus.moduler} moduler</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 bg-gray-200 rounded-full h-1.5 mr-3">
-                          <div className="bg-orange-400 h-1.5 rounded-full" style={{ width: '0%' }}></div>
-                        </div>
-                        <span className="text-xs text-gray-400">0%</span>
+                      <p className="font-semibold mb-0.5"
+                        style={{ fontSize: '13px', color: '#111827', fontFamily: 'Arial' }}>
+                        {k.titel}
+                      </p>
+                      <p className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+                        {k.niveau.join(' · ')} · {k.moduler} moduler
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 ml-4 flex-shrink-0">
+                      <span className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>{k.varighed}</span>
+                      <div className="w-20 h-1 rounded-full" style={{ backgroundColor: '#E5E7EB' }}>
+                        <div className="h-1 rounded-full w-0" style={{ backgroundColor: '#0F2A5E' }}></div>
                       </div>
                     </div>
-                  </a>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                  </div>
+                </a>
+              )
+            })}
+          </div>
+        )}
 
       </main>
     </div>

@@ -1,459 +1,178 @@
-'use client'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import Sidebar from '@/components/Sidebar'
+import QuizClient from './QuizClient'
 
-import { useState, use } from 'react'
-import { useRouter } from 'next/navigation'
-
-const KURSUS_MODULER: Record<string, number> = {
-  "1": 6, "2": 5, "3": 5, "4": 5, "5": 4, "6": 4,
-  "7": 5, "8": 5, "9": 4, "10": 4, "11": 4, "12": 5,
-  "13": 5, "14": 5, "15": 4, "16": 4, "17": 5, "18": 5,
-  "19": 4, "20": 5, "21": 5, "22": 4, "23": 4, "24": 4,
-}
-
-const QUIZ_DATA: Record<string, Record<number, {
-  spoergsmaal: string
-  svar: string[]
-  korrekt: number
-  forklaring: string
-}[]>> = {
+const MODULER: Record<string, Record<number, {
+  titel: string
+  beskrivelse: string
+  spoergsmaal: {
+    id: number
+    spoergsmaal: string
+    svar: string[]
+    korrekt: number
+    forklaring: string
+  }[]
+}>> = {
   "1": {
-    1: [
-      {
-        spoergsmaal: "Hvad er det primære formål med en markedsanalyse?",
-        svar: ["At fastsætte prisen på et produkt", "At indsamle og analysere information om markedet og forbrugerne", "At reklamere for virksomhedens produkter", "At ansætte nye medarbejdere"],
-        korrekt: 1,
-        forklaring: "En markedsanalyse bruges til at indsamle og analysere information om markedet, konkurrenter og forbrugere, så virksomheden kan træffe bedre beslutninger."
-      },
-      {
-        spoergsmaal: "Hvad er forskellen på primær og sekundær dataindsamling?",
-        svar: ["Primær data er dyrere end sekundær data", "Primær data indsamles selv til formålet, sekundær data er allerede indsamlet af andre", "Sekundær data er mere pålidelig end primær data", "Der er ingen forskel"],
-        korrekt: 1,
-        forklaring: "Primær data indsamles specifikt til det aktuelle formål — fx via spørgeskemaer. Sekundær data er allerede eksisterende data — fx statistikker fra Danmarks Statistik."
-      },
-      {
-        spoergsmaal: "Hvilken model bruges til at kortlægge styrker, svagheder, muligheder og trusler?",
-        svar: ["Kotlers model", "SWOT-analysen", "Ansoff-matricen", "BCG-matricen"],
-        korrekt: 1,
-        forklaring: "SWOT-analysen kortlægger interne styrker og svagheder samt eksterne muligheder og trusler for en virksomhed."
-      },
-      {
-        spoergsmaal: "En virksomhed vil undersøge kundernes tilfredshed med et nyt produkt. Hvilken metode er mest velegnet til at få nuancerede svar fra få respondenter?",
-        svar: ["Et spørgeskema med 500 deltagere", "Et kvantitativt telefoninterview", "Et kvalitativt dybdeinterview med 8-10 kunder", "En observation i butikken"],
-        korrekt: 2,
-        forklaring: "Kvalitative dybdeinterviews giver nuancerede og detaljerede svar fra få respondenter — ideelt når man vil forstå hvorfor kunder handler som de gør."
-      },
-      {
-        spoergsmaal: "Arla Foods ønsker at undersøge markedet for plantebaserede mælkeprodukter i Sverige. Hvilken type data bør de indsamle FØRST?",
-        svar: ["Primær data via fokusgrupper i Sverige", "Sekundær data om det svenske marked fra tilgængelige rapporter og statistikker", "Primær data via spørgeskemaer til svenske forbrugere", "Sekundær data fra det danske marked"],
-        korrekt: 1,
-        forklaring: "Man bør altid starte med sekundær data da den er billigere og hurtigere at indhente. Sekundær data om det svenske marked giver et overblik som kan guide den efterfølgende primære dataindsamling."
-      },
-    ],
-    2: [
-      {
-        spoergsmaal: "Hvilke faser indgår i Kotlers købsprocessmodel?",
-        svar: ["Behov, søgning, vurdering, køb, efterkøb", "Reklame, interesse, køb, tilfredshed", "Produkt, pris, distribution, kommunikation", "Segmentering, målgruppe, positionering"],
-        korrekt: 0,
-        forklaring: "Kotlers købsprocessmodel beskriver fem faser: behovserkendelse, informationssøgning, vurdering af alternativer, købsbeslutning og efterkøbsadfærd."
-      },
-      {
-        spoergsmaal: "Hvad forstås ved begrebet 'kognitiv dissonans'?",
-        svar: ["Forbrugerens glæde ved købet", "Tvivl eller utilfredshed efter et køb", "Processen med at søge information", "Valget mellem to produkter"],
-        korrekt: 1,
-        forklaring: "Kognitiv dissonans opstår i efterkøbsfasen når forbrugeren begynder at tvivle på om det var det rigtige valg."
-      },
-      {
-        spoergsmaal: "Hvad er geografisk segmentering?",
-        svar: ["Segmentering baseret på alder og køn", "Segmentering baseret på interesser og livsstil", "Segmentering baseret på geografisk placering", "Segmentering baseret på indkomst"],
-        korrekt: 2,
-        forklaring: "Geografisk segmentering opdeler markedet efter geografisk placering — fx land, region eller by."
-      },
-      {
-        spoergsmaal: "En ung forbruger ser en reklame for en ny smartphone og begynder at overveje om han har brug for en ny. Hvilken fase i Kotlers model er han i?",
-        svar: ["Informationssøgning", "Behovserkendelse", "Vurdering af alternativer", "Efterkøbsadfærd"],
-        korrekt: 1,
-        forklaring: "Behovserkendelse er den første fase i Kotlers model — forbrugeren erkender at han har et behov eller ønske."
-      },
-      {
-        spoergsmaal: "Zalando bruger tidligere køb og browsing-historik til at vise personaliserede produktanbefalinger. Hvilken segmenteringstype anvender de primært?",
-        svar: ["Demografisk segmentering", "Geografisk segmentering", "Adfærdsmæssig segmentering", "Psykografisk segmentering"],
-        korrekt: 2,
-        forklaring: "Adfærdsmæssig segmentering baserer sig på forbrugerens faktiske adfærd — køb, søgninger og browsing."
-      },
-    ],
-    3: [
-      {
-        spoergsmaal: "Hvad måler en SWOT-analyse?",
-        svar: ["Virksomhedens omsætning og profit", "Interne styrker og svagheder samt eksterne muligheder og trusler", "Konkurrenternes markedsandele", "Kundetilfredshed og loyalitet"],
-        korrekt: 1,
-        forklaring: "SWOT-analysen kortlægger interne faktorer (styrker og svagheder) og eksterne faktorer (muligheder og trusler) for en virksomhed."
-      },
-      {
-        spoergsmaal: "Hvad er forskellen på en styrke og en mulighed i en SWOT-analyse?",
-        svar: ["Der er ingen forskel", "En styrke er intern, en mulighed er ekstern", "En styrke handler om fremtiden, en mulighed om nutiden", "En styrke er kvantitativ, en mulighed er kvalitativ"],
-        korrekt: 1,
-        forklaring: "Styrker er interne faktorer virksomheden selv kontrollerer. Muligheder er eksterne faktorer i omgivelserne som virksomheden kan udnytte."
-      },
-      {
-        spoergsmaal: "Aldi Danmark har lave priser og effektiv logistik som konkurrencefordele. Hvor hører disse faktorer hjemme i en SWOT?",
-        svar: ["Muligheder", "Trusler", "Styrker", "Svagheder"],
-        korrekt: 2,
-        forklaring: "Lave priser og effektiv logistik er interne faktorer som Aldi selv kontrollerer og som giver dem en fordel — det er styrker i SWOT-analysen."
-      },
-      {
-        spoergsmaal: "Hvad er Porters Five Forces primært brugt til?",
-        svar: ["At analysere interne ressourcer", "At forstå konkurrencesituationen og attraktiviteten i en branche", "At segmentere kunderne", "At planlægge markedsføringskampagner"],
-        korrekt: 1,
-        forklaring: "Porters Five Forces analyserer fem konkurrencekræfter i en branche: eksisterende konkurrenter, nye aktører, substituerende produkter, leverandørers og kunders forhandlingsstyrke."
-      },
-      {
-        spoergsmaal: "En virksomhed identificerer at der er mange nye konkurrenter på vej ind på markedet. Hvor placeres dette i SWOT-analysen?",
-        svar: ["Styrke", "Svaghed", "Mulighed", "Trussel"],
-        korrekt: 3,
-        forklaring: "Nye konkurrenter er en ekstern faktor der kan true virksomhedens markedsandele — det er en trussel i SWOT-analysen."
-      },
-    ],
-    4: [
-      {
-        spoergsmaal: "Hvad indgår i marketingmixets 4 P'er?",
-        svar: ["Produkt, Pris, Place (distribution), Promotion (kommunikation)", "People, Process, Physical evidence, Performance", "Profit, Promotion, People, Place", "Produkt, Profit, Pris, Planlægning"],
-        korrekt: 0,
-        forklaring: "De klassiske 4 P'er er: Produkt, Pris, Place/distribution og Promotion/kommunikation."
-      },
-      {
-        spoergsmaal: "Joe & The Juice sælger juice til høje priser med stærk brandidentitet. Hvilken prisstrategi anvender de primært?",
-        svar: ["Penetrationsprissætning", "Skimming-prissætning", "Premium-prissætning", "Konkurrencebaseret prissætning"],
-        korrekt: 2,
-        forklaring: "Premium-prissætning bruges når en virksomhed positionerer sig som eksklusiv og opkræver højere priser end konkurrenterne."
-      },
-      {
-        spoergsmaal: "Hvad er forskellen på pull- og push-strategi i distribution?",
-        svar: ["Pull trækker produktet mod forbrugeren via markedsføring, push skubber det via salgskanaler", "Push er digital markedsføring, pull er traditionel reklame", "Pull bruges til B2B, push til B2C", "Der er ingen forskel i praksis"],
-        korrekt: 0,
-        forklaring: "Push-strategi skubber produktet via distributionskanalerne. Pull-strategi skaber efterspørgsel hos forbrugerne direkte via markedsføring."
-      },
-      {
-        spoergsmaal: "En virksomhed lancerer et nyt produkt og sætter prisen lavt for hurtigt at erobre markedsandele. Hvad hedder denne strategi?",
-        svar: ["Skimming-prissætning", "Premium-prissætning", "Penetrationsprissætning", "Konkurrencebaseret prissætning"],
-        korrekt: 2,
-        forklaring: "Penetrationsprissætning bruges ved lancering hvor virksomheden sætter en lav pris for hurtigt at tiltrække kunder og erobre markedsandele."
-      },
-      {
-        spoergsmaal: "Hvilken distributionsform bruger Zalando når de sælger direkte til forbrugeren via deres eget website?",
-        svar: ["Intensiv distribution", "Selektiv distribution", "Eksklusiv distribution", "Direkte distribution"],
-        korrekt: 3,
-        forklaring: "Direkte distribution betyder at producenten sælger direkte til slutforbrugeren uden mellemhandlere."
-      },
-    ],
-    5: [
-      {
-        spoergsmaal: "Hvad er SEO og hvad bruges det til?",
-        svar: ["Social Engagement Optimization — til at øge følgere", "Search Engine Optimization — til at forbedre synlighed i søgeresultater", "Sales Enablement Operations — til at effektivisere salg", "Structured Email Outreach — til email-markedsføring"],
-        korrekt: 1,
-        forklaring: "SEO handler om at optimere en hjemmeside så den rangerer højere i søgemaskiner som Google og øger den organiske trafik."
-      },
-      {
-        spoergsmaal: "Hvad er content marketing?",
-        svar: ["Betalt annoncering på sociale medier", "Skabelse og deling af værdifuldt indhold for at tiltrække og fastholde en målgruppe", "E-mail nyhedsbreve til eksisterende kunder", "Influencer-samarbejder"],
-        korrekt: 1,
-        forklaring: "Content marketing handler om at skabe og dele relevant og værdifuldt indhold der tiltrækker en målgruppe frem for direkte reklame."
-      },
-      {
-        spoergsmaal: "DSB bruger Instagram til at dele billeder af togrejser og natur. Hvilket formål tjener dette primært?",
-        svar: ["Direkte salg af togbilletter", "Branding og at skabe positive associationer til virksomheden", "Kundeservice og klagehåndtering", "Rekruttering af nye medarbejdere"],
-        korrekt: 1,
-        forklaring: "Instagram bruges primært til branding — at opbygge en positiv fortælling og skabe emotionelle associationer."
-      },
-      {
-        spoergsmaal: "Hvad er forskellen på organisk og betalt reach på sociale medier?",
-        svar: ["Organisk reach er gratis og opnås via engagement, betalt reach købes via annoncering", "Organisk reach er mere effektivt end betalt reach", "Betalt reach er kun tilgængeligt for store virksomheder", "Der er ingen forskel på effekten"],
-        korrekt: 0,
-        forklaring: "Organisk reach er den gratis eksponering via likes og delinger. Betalt reach er annoncering man betaler for at nå en bredere eller mere præcis målgruppe."
-      },
-      {
-        spoergsmaal: "Novo Nordisk publicerer regelmæssigt videnskabelige artikler og rapporter om diabetes. Hvilken strategi er dette et eksempel på?",
-        svar: ["Viral marketing", "Influencer marketing", "Thought leadership og content marketing", "Search Engine Marketing (SEM)"],
-        korrekt: 2,
-        forklaring: "Thought leadership er en content marketing-strategi hvor virksomheden positionerer sig som ekspert ved at dele viden og indsigt."
-      },
-    ],
-    6: [
-      {
-        spoergsmaal: "Hvad er en vækststrategi ifølge Ansoff-matricen?",
-        svar: ["En strategi til at reducere omkostninger", "En strategi der beskriver hvordan en virksomhed kan vokse via produkt og marked", "En strategi til at håndtere konkurrenter", "En strategi til at optimere produktionen"],
-        korrekt: 1,
-        forklaring: "Ansoff-matricen beskriver fire vækststrategier: markedspenetration, markedsudvikling, produktudvikling og diversifikation."
-      },
-      {
-        spoergsmaal: "Arla Foods lancerer en ny type plantebaseret mælk til det danske marked hvor de allerede er stærkt repræsenterede. Hvilken Ansoff-strategi er dette?",
-        svar: ["Markedspenetration", "Markedsudvikling", "Produktudvikling", "Diversifikation"],
-        korrekt: 2,
-        forklaring: "Produktudvikling er strategien hvor virksomheden lancerer nye produkter på et eksisterende marked."
-      },
-      {
-        spoergsmaal: "Hvad forstås ved branding?",
-        svar: ["Virksomhedens logo og farver", "Den samlede opfattelse og identitet forbrugerne har af en virksomhed eller produkt", "Reklamebudgettet til markedsføring", "Virksomhedens produktsortiment"],
-        korrekt: 1,
-        forklaring: "Branding handler om den samlede opfattelse en virksomhed skaber hos forbrugerne — ikke kun logo og farver, men værdier, tone og oplevelser."
-      },
-      {
-        spoergsmaal: "Joe & The Juice vil ekspandere til det japanske marked. De er ikke til stede i Japan i dag. Hvilken Ansoff-strategi anvender de?",
-        svar: ["Markedspenetration", "Markedsudvikling", "Produktudvikling", "Diversifikation"],
-        korrekt: 1,
-        forklaring: "Markedsudvikling er strategien hvor virksomheden tager et eksisterende produkt ind på et nyt marked."
-      },
-      {
-        spoergsmaal: "Hvad er den primære forskel på differentiering og niche-strategi?",
-        svar: ["Differentiering henvender sig til alle, niche til et smalt segment", "Niche-strategi er dyrere end differentiering", "Differentiering bruges kun i B2B, niche i B2C", "Der er ingen forskel"],
-        korrekt: 0,
-        forklaring: "Differentiering handler om at tilbyde noget unikt på hele markedet. Niche-strategi fokuserer på et smalt og veldefineret segment med specifikke behov."
-      },
-    ],
-  },
-}
-
-const Logo = () => (
-  <div className="flex items-center gap-2">
-    <svg width="26" height="26" viewBox="0 0 30 30" fill="none">
-      <rect width="30" height="30" rx="8" fill="#F97316"/>
-      <polygon points="15,8 24,13 15,18 6,13" fill="white"/>
-      <path d="M15 18v8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M9 15.5v6" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-      <circle cx="9" cy="22.5" r="2.2" fill="white"/>
-    </svg>
-    <h1 className="text-lg font-bold tracking-normal">
-      <span className="text-blue-900">DIDANTO</span><span style={{ marginLeft: '4px', color: '#F97316' }}>.</span>
-    </h1>
-  </div>
-)
-
-export default function ModulPage({
-  params
-}: {
-  params: Promise<{ id: string; modulId: string }>
-}) {
-  const { id: kursusId, modulId: modulIdStr } = use(params)
-  const modulId = parseInt(modulIdStr)
-  const router = useRouter()
-
-  const totalModuler = KURSUS_MODULER[kursusId] || 6
-  const erSidsteModul = modulId === totalModuler
-  const quiz = QUIZ_DATA[kursusId]?.[modulId] || []
-
-  const [fase, setFase] = useState<'video' | 'quiz' | 'resultat'>('video')
-  const [aktivtSpoergsmaal, setAktivtSpoergsmaal] = useState(0)
-  const [valgteSvar, setValgteSvar] = useState<number[]>([])
-  const [vistForklaring, setVistForklaring] = useState(false)
-  const [korrekte, setKorrekte] = useState(0)
-
-  const aktivtQ = quiz[aktivtSpoergsmaal]
-  const erSidste = aktivtSpoergsmaal === quiz.length - 1
-  const harValgt = valgteSvar[aktivtSpoergsmaal] !== undefined
-  const valgtSvar = valgteSvar[aktivtSpoergsmaal]
-  const erKorrekt = valgtSvar === aktivtQ?.korrekt
-
-  const vaelgSvar = (index: number) => {
-    if (harValgt) return
-    const nyeSvar = [...valgteSvar]
-    nyeSvar[aktivtSpoergsmaal] = index
-    setValgteSvar(nyeSvar)
-    if (index === aktivtQ.korrekt) setKorrekte(prev => prev + 1)
-    setVistForklaring(true)
-  }
-
-  const naesteSpoergsmaal = () => {
-    if (erSidste) {
-      const erBestaaet = (korrekte + (valgtSvar === aktivtQ?.korrekt ? 1 : 0)) >= Math.ceil(quiz.length * 0.6)
-      if (erBestaaet) {
-        fetch('/api/fremgang', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            kursus_id: parseInt(kursusId),
-            modul_id: modulId,
-            quiz_bestaaet: true,
-            video_set: true
-          })
-        })
-      }
-      setFase('resultat')
-    } else {
-      setAktivtSpoergsmaal(prev => prev + 1)
-      setVistForklaring(false)
+    1: {
+      titel: "Introduktion til markedsanalyse",
+      beskrivelse: "I dette modul introduceres du til markedsanalysens formål og centrale begreber.",
+      spoergsmaal: [
+        { id: 1, spoergsmaal: "Hvad er det primære formål med en markedsanalyse?", svar: ["At øge virksomhedens omsætning direkte", "At skabe grundlag for informerede beslutninger om marked og kunder", "At analysere konkurrenternes regnskaber", "At rekruttere nye medarbejdere"], korrekt: 1, forklaring: "Markedsanalyse giver virksomheden viden om markedet og kunderne, som danner grundlag for strategiske beslutninger." },
+        { id: 2, spoergsmaal: "Hvilken af følgende er en intern kilde til markedsinformation?", svar: ["Brancherapporter", "Salgsstatistikker fra eget CRM-system", "Danmarks Statistik", "Konkurrenternes hjemmesider"], korrekt: 1, forklaring: "Interne kilder er data virksomheden selv har indsamlet, fx salgsdata og kunderegistre." },
+        { id: 3, spoergsmaal: "Hvad kendetegner en kvantitativ markedsanalyse?", svar: ["Den baseres på dybdegående interviews med få respondenter", "Den måler holdninger og følelser", "Den indsamler målbare data fra mange respondenter", "Den er altid dyrere end kvalitativ analyse"], korrekt: 2, forklaring: "Kvantitativ analyse handler om at indsamle målbare data fra et større antal respondenter." },
+        { id: 4, spoergsmaal: "Hvornår er kvalitativ markedsanalyse mest hensigtsmæssig?", svar: ["Når man vil kortlægge markedsstørrelsen præcist", "Når man vil forstå baggrunden for kunders adfærd og holdninger", "Når man skal beregne markedsandele", "Når man har et meget stort budget"], korrekt: 1, forklaring: "Kvalitativ analyse bruges til at forstå motiver, holdninger og adfærd." },
+        { id: 5, spoergsmaal: "Hvad er en målgruppe i markedsføringskontekst?", svar: ["Alle potentielle kunder i hele verden", "Den specifikke gruppe af forbrugere virksomheden retter sine aktiviteter mod", "Virksomhedens eksisterende kunder udelukkende", "De kunder der genererer mest omsætning"], korrekt: 1, forklaring: "En målgruppe er den afgrænsede gruppe af forbrugere som virksomheden primært kommunikerer til." },
+      ]
+    },
+    2: {
+      titel: "Primær og sekundær data",
+      beskrivelse: "Vi gennemgår forskellen på primær og sekundær data og hvornår du bør bruge hvilken type.",
+      spoergsmaal: [
+        { id: 1, spoergsmaal: "Hvad karakteriserer primær data?", svar: ["Data der er indsamlet af andre til et andet formål", "Data du selv indsamler til dit specifikke formål", "Data fra offentlige statistikker", "Data fra brancheorganisationer"], korrekt: 1, forklaring: "Primær data indsamles specifikt til det aktuelle formål — fx via interviews eller spørgeskemaer." },
+        { id: 2, spoergsmaal: "Hvilken af følgende er et eksempel på sekundær data?", svar: ["Et fokusgruppeinterview du selv afholder", "Et spørgeskema du sender til kunder", "En brancheanalyse fra Dansk Erhverv", "En observation du foretager i en butik"], korrekt: 2, forklaring: "Sekundær data er allerede indsamlet data — fx rapporter og statistikker produceret af andre." },
+        { id: 3, spoergsmaal: "Hvad er den primære fordel ved sekundær data?", svar: ["Den er altid mere præcis end primær data", "Den er billigere og hurtigere at indhente", "Den er skræddersyet til dit specifikke behov", "Den er mere aktuel end primær data"], korrekt: 1, forklaring: "Sekundær data er typisk hurtigere og billigere at indhente da den allerede eksisterer." },
+        { id: 4, spoergsmaal: "Hvornår bør man foretrække primær data frem for sekundær?", svar: ["Når man har et lille budget", "Når man har brug for hurtige svar", "Når der ikke findes relevant eksisterende data om det specifikke problem", "Når man vil analysere historiske tendenser"], korrekt: 2, forklaring: "Primær data er nødvendig når der ikke eksisterer tilstrækkelig relevant data om det konkrete problem." },
+        { id: 5, spoergsmaal: "Hvad er Danmarks Statistik et eksempel på?", svar: ["En primær datakilde", "En intern datakilde", "En sekundær ekstern datakilde", "En kvalitativ datakilde"], korrekt: 2, forklaring: "Danmarks Statistik er en sekundær ekstern datakilde — data indsamlet og publiceret af en ekstern organisation." },
+      ]
+    },
+    3: {
+      titel: "Segmentering og målgruppe",
+      beskrivelse: "Lær de fire segmenteringstyper og hvordan du anvender dem på konkrete virksomheder.",
+      spoergsmaal: [
+        { id: 1, spoergsmaal: "Hvad er formålet med markedssegmentering?", svar: ["At sælge til alle mulige kunder", "At opdele markedet i grupper med fælles karakteristika", "At reducere produktionsomkostningerne", "At eliminere konkurrenter"], korrekt: 1, forklaring: "Segmentering handler om at opdele et heterogent marked i mere homogene grupper." },
+        { id: 2, spoergsmaal: "Hvilken segmenteringstype baseres på forbrugernes livsstil og værdier?", svar: ["Demografisk segmentering", "Geografisk segmentering", "Psykografisk segmentering", "Adfærdsmæssig segmentering"], korrekt: 2, forklaring: "Psykografisk segmentering opdeler markedet efter personlighed, livsstil, værdier og interesser." },
+        { id: 3, spoergsmaal: "En virksomhed der tilbyder lavere priser til studerende bruger primært hvilken segmenteringstype?", svar: ["Geografisk segmentering", "Adfærdsmæssig segmentering", "Psykografisk segmentering", "Demografisk segmentering"], korrekt: 3, forklaring: "At segmentere efter uddannelsesstatus er demografisk segmentering." },
+        { id: 4, spoergsmaal: "Hvad er en niche-strategi i segmenteringssammenhæng?", svar: ["At henvende sig til hele markedet med ét produkt", "At fokusere på et meget specifikt og afgrænset markedssegment", "At tilbyde mange varianter til mange segmenter", "At konkurrere på pris i masssemarkedet"], korrekt: 1, forklaring: "En niche-strategi indebærer fokus på et smalt, specifikt segment med særlige behov." },
+        { id: 5, spoergsmaal: "Hvad kendetegner et attraktivt markedssegment?", svar: ["Det er så bredt som muligt", "Det er svært at måle og vurdere", "Det er målbart, tilgængeligt, rentabelt og handlingsorienteret", "Det indeholder flest mulige konkurrenter"], korrekt: 2, forklaring: "Et godt segment skal kunne måles, nås, være lønsomhed og give mulighed for at agere." },
+      ]
+    },
+    4: {
+      titel: "Kotlers købsprocessmodel",
+      beskrivelse: "Gennemgang af Kotlers 5-fase model for forbrugernes købsproces med cases fra dansk detailhandel.",
+      spoergsmaal: [
+        { id: 1, spoergsmaal: "Hvad er den første fase i Kotlers købsprocessmodel?", svar: ["Informationssøgning", "Behovserkendelse", "Vurdering af alternativer", "Købsbeslutning"], korrekt: 1, forklaring: "Behovserkendelse er udgangspunktet — forbrugeren opdager et behov der skal løses." },
+        { id: 2, spoergsmaal: "Hvad er kognitiv dissonans i Kotlers model?", svar: ["Tvivl og utilfredshed der opstår efter købet", "Processen med at søge information om produkter", "Sammenligningen af forskellige alternativer", "Den første fase i købsprocessen"], korrekt: 0, forklaring: "Kognitiv dissonans er den tvivl og utilfredshed der kan opstå efter et køb." },
+        { id: 3, spoergsmaal: "I hvilken fase sammenligner forbrugeren forskellige produkter og mærker?", svar: ["Behovserkendelse", "Informationssøgning", "Vurdering af alternativer", "Efterkøbsadfærd"], korrekt: 2, forklaring: "I vurderingsfasen sammenligner forbrugeren de muligheder der er fundet under informationssøgningen." },
+        { id: 4, spoergsmaal: "Hvorfor er efterkøbsadfærd vigtig for virksomheder?", svar: ["Den har ingen betydning for virksomheden", "Tilfredse kunder kan blive loyale kunder og ambassadører", "Det er den billigste fase at påvirke", "Efterkøbsadfærd sker kun ved dyre køb"], korrekt: 1, forklaring: "Efterkøbstilfredse kunder kan føre til gentagne køb og positive anbefalinger." },
+        { id: 5, spoergsmaal: "Hvilken faktor kan forstyrre overgangen fra intention til faktisk køb?", svar: ["For mange farver på produktet", "Andres holdninger og uventede situationsfaktorer", "Produktets vægt", "Virksomhedens CVR-nummer"], korrekt: 1, forklaring: "Andres holdninger og uventede faktorer kan forhindre at en positiv holdning fører til et køb." },
+      ]
+    },
+    5: {
+      titel: "SWOT-analyse i praksis",
+      beskrivelse: "Lær at udføre og anvende SWOT-analysen på konkrete virksomheder med fokus på didaktisk formidling.",
+      spoergsmaal: [
+        { id: 1, spoergsmaal: "Hvad repræsenterer S i SWOT-analysen?", svar: ["Strategier", "Styrker", "Segmenter", "Salg"], korrekt: 1, forklaring: "S står for Strengths — virksomhedens interne styrker og konkurrencefordele." },
+        { id: 2, spoergsmaal: "Hvilke elementer i SWOT er interne faktorer?", svar: ["Muligheder og trusler", "Styrker og svagheder", "Svagheder og muligheder", "Styrker og trusler"], korrekt: 1, forklaring: "Styrker og svagheder er interne faktorer som virksomheden selv kan påvirke." },
+        { id: 3, spoergsmaal: "Hvad er en trussel i SWOT-sammenhæng?", svar: ["En intern svaghed der skal forbedres", "En ekstern faktor der kan skade virksomhedens position", "Et produkt virksomheden overvejer at lancere", "En ny medarbejder der ansættes"], korrekt: 1, forklaring: "Trusler er eksterne faktorer der kan påvirke virksomheden negativt." },
+        { id: 4, spoergsmaal: "Hvad er formålet med en TOWS-matrix?", svar: ["At erstatte SWOT-analysen", "At omsætte SWOT-analysens elementer til konkrete strategier", "At analysere konkurrenternes styrker", "At beregne virksomhedens markedsandel"], korrekt: 1, forklaring: "TOWS-matricen kombinerer SWOT-elementerne parvis for at generere konkrete strategiske handlemuligheder." },
+        { id: 5, spoergsmaal: "Hvornår er en SWOT-analyse mest værdifuld?", svar: ["Kun ved virksomhedens opstart", "Som grundlag for strategisk planlægning og beslutningstagning", "Udelukkende til markedsføringskampagner", "Kun ved fusioner og opkøb"], korrekt: 1, forklaring: "SWOT er et fleksibelt analyseværktøj der er værdifuldt i alle strategiske beslutningssituationer." },
+      ]
+    },
+    6: {
+      titel: "Afsluttende quiz og opsummering",
+      beskrivelse: "Saml op på kursets kernebegreber og test din forståelse med den afsluttende quiz.",
+      spoergsmaal: [
+        { id: 1, spoergsmaal: "Hvilken model beskriver forbrugerens beslutningsproces i 5 faser?", svar: ["SWOT-modellen", "Kotlers købsprocessmodel", "Ansoffs vækstmatrix", "BCG-matricen"], korrekt: 1, forklaring: "Kotlers model beskriver de fem faser: behovserkendelse, informationssøgning, vurdering, køb og efterkøbsadfærd." },
+        { id: 2, spoergsmaal: "Hvad er forskellen på demografisk og psykografisk segmentering?", svar: ["Der er ingen forskel", "Demografisk er baseret på målbare data som alder og køn, psykografisk på livsstil og værdier", "Psykografisk er mere præcis end demografisk", "Demografisk bruges kun i B2B-markeder"], korrekt: 1, forklaring: "Demografisk segmentering bruger objektive målbare data, mens psykografisk handler om livsstil." },
+        { id: 3, spoergsmaal: "Hvad er den vigtigste forskel på primær og sekundær data?", svar: ["Pris er den eneste forskel", "Primær data er indsamlet til det specifikke formål, sekundær data er allerede eksisterende", "Sekundær data er altid mere pålidelig", "Primær data kan kun indsamles via spørgeskemaer"], korrekt: 1, forklaring: "Den grundlæggende forskel er om data er indsamlet specifikt til formålet eller genanvendt." },
+        { id: 4, spoergsmaal: "Hvilke to faktorer udgør de interne elementer i en SWOT-analyse?", svar: ["Muligheder og trusler", "Styrker og muligheder", "Styrker og svagheder", "Svagheder og trusler"], korrekt: 2, forklaring: "Styrker og svagheder er interne — de vedrører virksomhedens egne ressourcer og kompetencer." },
+        { id: 5, spoergsmaal: "Hvad er det overordnede formål med markedsanalyse?", svar: ["At øge virksomhedens aktiekurs", "At skabe viden om marked og kunder som grundlag for bedre beslutninger", "At eliminere al usikkerhed i forretningsbeslutninger", "At kopiere konkurrenternes strategier"], korrekt: 1, forklaring: "Markedsanalyse reducerer usikkerhed og skaber et bedre vidensgrundlag for beslutninger." },
+      ]
     }
   }
+}
 
-  const bestaaet = quiz.length > 0 && korrekte >= Math.ceil(quiz.length * 0.6)
+const FAG_STIL: Record<string, { bg: string; tekst: string }> = {
+  'Afsætning':              { bg: '#EFF6FF', tekst: '#1E40AF' },
+  'Salg og service':        { bg: '#F0FDFA', tekst: '#0F766E' },
+  'Erhvervsøkonomi':        { bg: '#F0FDF4', tekst: '#166534' },
+  'Kommunikation':          { bg: '#F5F3FF', tekst: '#5B21B6' },
+  'Matematik':              { bg: '#FFFBEB', tekst: '#92400E' },
+  'Dansk':                  { bg: '#FFF1F2', tekst: '#9F1239' },
+  'Engelsk':                { bg: '#EFF6FF', tekst: '#1E3A8A' },
+  'Informatik':             { bg: '#ECFEFF', tekst: '#164E63' },
+  'Didaktik / Pædagogik':   { bg: '#FDF4FF', tekst: '#6B21A8' },
+}
+
+const KURSUS_FAG: Record<string, string> = {
+  "1": "Afsætning", "2": "Afsætning", "3": "Afsætning",
+  "4": "Salg og service", "5": "Salg og service", "6": "Salg og service",
+  "7": "Erhvervsøkonomi", "8": "Erhvervsøkonomi", "9": "Erhvervsøkonomi",
+  "10": "Kommunikation", "11": "Kommunikation", "12": "Kommunikation",
+  "22": "Didaktik / Pædagogik", "23": "Didaktik / Pædagogik", "24": "Didaktik / Pædagogik",
+}
+
+export default async function ModulPage({ params }: { params: Promise<{ id: string; modulId: string }> }) {
+  const { id, modulId } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const navn: string = user.user_metadata?.navn || ''
+  const kursusModuler = MODULER[id]
+  const modul = kursusModuler?.[parseInt(modulId)]
+  if (!modul) redirect(`/kurser/${id}`)
+
+  const fag = KURSUS_FAG[id] || 'Afsætning'
+  const stil = FAG_STIL[fag] || { bg: '#F9FAFB', tekst: '#374151' }
+  const totalModuler = Object.keys(kursusModuler).length
+  const erSidste = parseInt(modulId) === totalModuler
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col min-h-screen fixed top-0 left-0">
-        <div className="px-5 py-5 border-b border-gray-100">
-          <Logo />
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider">Menu</div>
-          <a href="/dashboard" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-            <span>📊</span> Oversigt
-          </a>
-          <a href="/kurser" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium">
-            <span>🎓</span> Kurser
-          </a>
-          <a href="/kompetencer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-            <span>📜</span> Mine beviser
-          </a>
-          <a href="/profil" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-            <span>👤</span> Min profil
-          </a>
-        </nav>
-      </aside>
+    <div className="min-h-screen flex" style={{ backgroundColor: '#F9FAFB' }}>
+      <Sidebar navn={navn} email={user.email} />
 
-      <main className="flex-1 ml-56 px-8 py-8 max-w-3xl">
+      <main className="flex-1 ml-52 px-10 py-8 max-w-3xl">
+
         <div className="mb-6">
-          <a href={`/kurser/${kursusId}`} className="text-sm text-gray-400 hover:text-gray-600 flex items-center gap-1">
-            ← Tilbage til kurset
+          <a href={`/kurser/${id}`}
+            style={{ fontSize: '12px', color: '#6B7280', fontFamily: 'Arial', textDecoration: 'none' }}>
+            ← Tilbage til kursus
           </a>
         </div>
 
-        {fase === 'video' && (
-          <div>
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
-              <div className="bg-gray-900 aspect-video flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-4 mx-auto cursor-pointer hover:bg-white/30 transition-colors">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                  <p className="text-white text-sm font-medium">Modul {modulId}</p>
-                  <p className="text-white/60 text-xs mt-1">Video produceres i Synthesia</p>
-                </div>
-              </div>
-              <div className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Modul {modulId}</h2>
-                <p className="text-gray-500 text-sm">Se videoen og tag derefter videnchecket. Du skal besvare mindst 60% korrekt for at bestå.</p>
-              </div>
-            </div>
-            <button onClick={() => setFase('quiz')}
-              className="w-full bg-blue-900 text-white py-3 rounded-xl font-medium hover:bg-blue-800 transition-colors">
-              Start videncheck →
-            </button>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded"
+              style={{ backgroundColor: stil.bg, color: stil.tekst, fontFamily: 'Arial' }}>
+              {fag}
+            </span>
+            <span className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+              Modul {modulId} af {totalModuler}
+            </span>
           </div>
-        )}
+          <h1 className="font-bold mb-2"
+            style={{ fontSize: '20px', color: '#111827', fontFamily: 'Arial' }}>
+            {modul.titel}
+          </h1>
+          <p style={{ fontSize: '13px', color: '#6B7280', fontFamily: 'Arial', lineHeight: '1.6' }}>
+            {modul.beskrivelse}
+          </p>
+        </div>
 
-        {fase === 'quiz' && aktivtQ && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Videncheck</h2>
-              <span className="text-sm text-gray-400">{aktivtSpoergsmaal + 1} / {quiz.length}</span>
-            </div>
-            <div className="bg-gray-100 rounded-full h-2 mb-8">
-              <div className="bg-orange-400 h-2 rounded-full transition-all"
-                style={{ width: `${((aktivtSpoergsmaal + 1) / quiz.length) * 100}%` }}></div>
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6">
-              <p className="text-lg font-medium text-gray-900 mb-6 leading-relaxed">{aktivtQ.spoergsmaal}</p>
-              <div className="space-y-3">
-                {aktivtQ.svar.map((svar, i) => {
-                  let klasse = "w-full text-left px-5 py-4 rounded-xl border-2 transition-all text-sm "
-                  if (!harValgt) klasse += "border-gray-200 hover:border-blue-300 bg-white text-gray-700 cursor-pointer"
-                  else if (i === aktivtQ.korrekt) klasse += "border-green-400 bg-green-50 text-green-800"
-                  else if (i === valgtSvar && i !== aktivtQ.korrekt) klasse += "border-red-300 bg-red-50 text-red-700"
-                  else klasse += "border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed"
-                  return (
-                    <button key={i} onClick={() => vaelgSvar(i)} className={klasse}>
-                      <div className="flex items-center gap-3">
-                        <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                          !harValgt ? 'border-gray-300 text-gray-500' :
-                          i === aktivtQ.korrekt ? 'border-green-400 bg-green-400 text-white' :
-                          i === valgtSvar ? 'border-red-400 bg-red-400 text-white' :
-                          'border-gray-200 text-gray-400'
-                        }`}>
-                          {!harValgt ? String.fromCharCode(65 + i) :
-                           i === aktivtQ.korrekt ? '✓' :
-                           i === valgtSvar ? '✗' :
-                           String.fromCharCode(65 + i)}
-                        </span>
-                        {svar}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-              {vistForklaring && (
-                <div className={`mt-6 p-4 rounded-xl ${erKorrekt ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
-                  <p className={`text-sm font-medium mb-1 ${erKorrekt ? 'text-green-700' : 'text-orange-700'}`}>
-                    {erKorrekt ? '✓ Korrekt!' : '✗ Ikke helt rigtigt'}
-                  </p>
-                  <p className={`text-sm ${erKorrekt ? 'text-green-600' : 'text-orange-600'}`}>
-                    {aktivtQ.forklaring}
-                  </p>
-                </div>
-              )}
-            </div>
-            {harValgt && (
-              <button onClick={naesteSpoergsmaal}
-                className="w-full bg-blue-900 text-white py-3 rounded-xl font-medium hover:bg-blue-800 transition-colors">
-                {erSidste ? 'Se resultat →' : 'Næste spørgsmål →'}
-              </button>
-            )}
-          </div>
-        )}
-
-        {fase === 'resultat' && (
+        <div className="rounded-lg mb-6 flex items-center justify-center"
+          style={{ backgroundColor: '#0F2A5E', height: '200px' }}>
           <div className="text-center">
-            <div className={`rounded-2xl p-10 mb-6 ${bestaaet ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
-              <div className="text-5xl mb-4">{bestaaet ? '🎉' : '📚'}</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {bestaaet ? 'Modul bestået!' : 'Prøv igen'}
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Du svarede korrekt på {korrekte} ud af {quiz.length} spørgsmål
-              </p>
-              <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 border">
-                <span className="text-lg font-bold text-gray-900">
-                  {Math.round((korrekte / quiz.length) * 100)}%
-                </span>
-                <span className="text-sm text-gray-500">
-                  {bestaaet ? '— Bestået ✓' : '— Kræver 60%'}
-                </span>
-              </div>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
+              style={{ backgroundColor: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.4)' }}>
+              <div style={{ width: 0, height: 0, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '14px solid white', marginLeft: '3px' }}></div>
             </div>
-            {bestaaet ? (
-              <div className="space-y-3">
-                <button
-                  onClick={() => erSidsteModul
-                    ? router.push(`/kurser/${kursusId}/gennemfoert`)
-                    : router.push(`/kurser/${kursusId}/modul/${modulId + 1}`)
-                  }
-                  className="w-full bg-blue-900 text-white py-3 rounded-xl font-medium hover:bg-blue-800">
-                  {erSidsteModul ? 'Fuldfør kursus 🎉' : 'Næste modul →'}
-                </button>
-                <button onClick={() => router.push(`/kurser/${kursusId}`)}
-                  className="w-full border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50">
-                  Tilbage til kursoversigt
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <button onClick={() => {
-                  setFase('quiz')
-                  setAktivtSpoergsmaal(0)
-                  setValgteSvar([])
-                  setVistForklaring(false)
-                  setKorrekte(0)
-                }}
-                  className="w-full bg-orange-500 text-white py-3 rounded-xl font-medium hover:bg-orange-600">
-                  Prøv quizzen igen
-                </button>
-                <button onClick={() => setFase('video')}
-                  className="w-full border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50">
-                  Se videoen igen
-                </button>
-              </div>
-            )}
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'Arial' }}>
+              Video tilgængelig snart
+            </p>
           </div>
-        )}
+        </div>
+
+        <QuizClient
+          kursusId={id}
+          modulId={parseInt(modulId)}
+          spoergsmaal={modul.spoergsmaal}
+          erSidste={erSidste}
+          userId={user.id}
+        />
+
       </main>
     </div>
   )

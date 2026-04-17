@@ -1,242 +1,284 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
+import Sidebar from '@/components/Sidebar'
 
-const kurser: Record<number, {
-  id: number
+const KURSER: Record<string, {
   titel: string
   fag: string
-  niveau: string
-  varighed: string
   beskrivelse: string
-  farve: string
-  kompetencemaal: string[]
-  moduler: { id: number; titel: string; varighed: string; beskrivelse: string }[]
+  niveau: string[]
+  varighed: string
+  moduler: { id: number; titel: string; varighed: string }[]
 }> = {
-  1: {
-    id: 1,
+  "1": {
     titel: "Markedsanalyse og forbrugeradfærd",
-    fag: "Afsætning A",
-    niveau: "GF2 · HF1",
+    fag: "Afsætning",
+    beskrivelse: "Lær at analysere markeder og forbrugeradfærd med udgangspunkt i Kotlers købsprocessmodel, segmentering og SWOT. Kurset er forankret i bekendtgørelsen for Afsætning A.",
+    niveau: ["A", "B"],
     varighed: "2,5 timer",
-    farve: "blue",
-    beskrivelse: "Dette kursus giver dig opdateret faglig viden om markedsanalyse og forbrugeradfærd forankret i bekendtgørelsen for Afsætning A. Du arbejder med Kotlers købsprocessmodel, segmentering og SWOT med cases fra dansk erhvervsliv.",
-    kompetencemaal: [
-      "Anvende og vurdere afsætningsøkonomiske modeller til analyse af virksomhedens situation",
-      "Analysere forbrugeradfærd og segmentere markeder med henblik på at identificere målgrupper",
-      "Planlægge og gennemføre markedsanalyser og vurdere resultaternes anvendelighed",
-    ],
     moduler: [
-      { id: 1, titel: "Introduktion til markedsanalyse", varighed: "12 min", beskrivelse: "Hvad er markedsanalyse og hvorfor er det centralt i afsætningsfaget?" },
-      { id: 2, titel: "Forbrugeradfærd og Kotlers model", varighed: "15 min", beskrivelse: "Gennemgang af Kotlers købsprocessmodel med cases fra MENY og Arla." },
-      { id: 3, titel: "Segmentering og målgruppeanalyse", varighed: "12 min", beskrivelse: "Segmenteringsvariable og hvordan du underviser i målgruppeanalyse." },
-      { id: 4, titel: "SWOT-analyse i praksis", varighed: "10 min", beskrivelse: "Praktisk gennemgang af SWOT med elevcase fra dansk detailhandel." },
-      { id: 5, titel: "Digital markedsanalyse", varighed: "11 min", beskrivelse: "Brug af digitale data og sociale medier i markedsanalysen." },
-      { id: 6, titel: "Afsluttende videncheck", varighed: "10 min", beskrivelse: "Saml din viden og tag den afsluttende quiz for at modtage kursusbevis." },
-    ],
+      { id: 1, titel: "Introduktion til markedsanalyse", varighed: "25 min" },
+      { id: 2, titel: "Primær og sekundær data", varighed: "20 min" },
+      { id: 3, titel: "Segmentering og målgruppe", varighed: "25 min" },
+      { id: 4, titel: "Kotlers købsprocessmodel", varighed: "20 min" },
+      { id: 5, titel: "SWOT-analyse i praksis", varighed: "20 min" },
+      { id: 6, titel: "Afsluttende quiz og opsummering", varighed: "20 min" },
+    ]
   },
-  2: {
-    id: 2,
+  "2": {
+    titel: "Prissætning og prisstrategi",
+    fag: "Afsætning",
+    beskrivelse: "Gennemgang af prisstrategier og prissætningsmodeller med aktuelle cases fra dansk erhvervsliv.",
+    niveau: ["A", "B", "C"],
+    varighed: "2 timer",
+    moduler: [
+      { id: 1, titel: "Prisstrategier — overblik", varighed: "20 min" },
+      { id: 2, titel: "Omkostningsbaseret prissætning", varighed: "25 min" },
+      { id: 3, titel: "Konkurrencebaseret prissætning", varighed: "20 min" },
+      { id: 4, titel: "Psykologisk prissætning", varighed: "20 min" },
+      { id: 5, titel: "Afsluttende quiz", varighed: "15 min" },
+    ]
+  },
+  "3": {
+    titel: "Digital markedsføring i praksis",
+    fag: "Afsætning",
+    beskrivelse: "Opdater din viden om SEO, content marketing og sociale medier med cases fra LEGO og Novo Nordisk.",
+    niveau: ["A", "B"],
+    varighed: "2 timer",
+    moduler: [
+      { id: 1, titel: "SEO og søgemaskineoptimering", varighed: "20 min" },
+      { id: 2, titel: "Content marketing", varighed: "20 min" },
+      { id: 3, titel: "Sociale medier i erhvervskontekst", varighed: "25 min" },
+      { id: 4, titel: "Dataanalyse og måling", varighed: "20 min" },
+      { id: 5, titel: "Afsluttende quiz", varighed: "15 min" },
+    ]
+  },
+  "4": {
     titel: "Salgspsykologi og kundehåndtering",
     fag: "Salg og service",
-    niveau: "HF1",
-    varighed: "2 timer",
-    farve: "teal",
     beskrivelse: "Bliv opdateret på moderne salgsteknikker, kundetyper og reklamationshåndtering med cases fra dansk detailhandel.",
-    kompetencemaal: [
-      "Anvende salgsteknikker og kundepsykologi i undervisningen",
-      "Håndtere reklamationer og svære kundedialog",
-      "Identificere kundetyper og tilpasse kommunikation",
-    ],
-    moduler: [
-      { id: 1, titel: "Salgsteknikker i dag", varighed: "12 min", beskrivelse: "Moderne salgsteknikker og hvad der virker i 2025." },
-      { id: 2, titel: "Kundetyper og adfærd", varighed: "14 min", beskrivelse: "De vigtigste kundetyper og hvordan man arbejder med dem." },
-      { id: 3, titel: "Reklamationshåndtering", varighed: "11 min", beskrivelse: "Cases fra Elgiganten og teleselskaber om svær kundedialog." },
-      { id: 4, titel: "Digital kundekontakt", varighed: "12 min", beskrivelse: "Salg og service via chat, mail og sociale medier." },
-      { id: 5, titel: "Afsluttende videncheck", varighed: "11 min", beskrivelse: "Quiz og kursusbevis." },
-    ],
-  },
-  3: {
-    id: 3,
-    titel: "Budgettering og regnskabsforståelse",
-    fag: "Erhvervsøkonomi B",
-    niveau: "GF2",
+    niveau: ["GF2", "HF1", "HF2"],
     varighed: "2 timer",
-    farve: "green",
-    beskrivelse: "Styrk din undervisning i resultatopgørelse, budgetlægning og likviditetsstyring med aktuelle SMV-cases fra dansk erhvervsliv.",
-    kompetencemaal: [
-      "Opstille og analysere resultatopgørelser",
-      "Udarbejde og vurdere budgetter",
-      "Analysere likviditet og kapitalbehov",
-    ],
     moduler: [
-      { id: 1, titel: "Resultatopgørelsen forklaret", varighed: "14 min", beskrivelse: "Gennemgang af resultatopgørelsen med SMV-cases." },
-      { id: 2, titel: "Budgetlægning i praksis", varighed: "13 min", beskrivelse: "Hvordan laver man et budget og hvad bruger man det til?" },
-      { id: 3, titel: "Likviditetsstyring", varighed: "12 min", beskrivelse: "Likviditetsbudget og kapitalbehovsberegning." },
-      { id: 4, titel: "Nøgletal og analyse", varighed: "11 min", beskrivelse: "De vigtigste nøgletal og hvad de fortæller os." },
-      { id: 5, titel: "Afsluttende videncheck", varighed: "10 min", beskrivelse: "Quiz og kursusbevis." },
-    ],
+      { id: 1, titel: "Kundetyper og adfærd", varighed: "20 min" },
+      { id: 2, titel: "Salgsteknikker i praksis", varighed: "25 min" },
+      { id: 3, titel: "Reklamation og svær dialog", varighed: "20 min" },
+      { id: 4, titel: "Digitalt salg og kundekontakt", varighed: "20 min" },
+      { id: 5, titel: "Afsluttende quiz", varighed: "15 min" },
+    ]
   },
-  4: {
-    id: 4,
+  "7": {
+    titel: "Budgettering og regnskabsforståelse",
+    fag: "Erhvervsøkonomi",
+    beskrivelse: "Opdater din viden om budgettyper, resultatopgørelse og balance med praktiske erhvervsøkonomiske cases.",
+    niveau: ["A", "B", "C"],
+    varighed: "2 timer",
+    moduler: [
+      { id: 1, titel: "Budgettyper og formål", varighed: "20 min" },
+      { id: 2, titel: "Resultatopgørelsen", varighed: "25 min" },
+      { id: 3, titel: "Balancen", varighed: "20 min" },
+      { id: 4, titel: "Nøgletal og analyse", varighed: "20 min" },
+      { id: 5, titel: "Afsluttende quiz", varighed: "15 min" },
+    ]
+  },
+  "10": {
     titel: "Digital kommunikation og branding",
     fag: "Kommunikation",
-    niveau: "GF2",
+    beskrivelse: "Opdater din viden om digital kommunikation, branding og sociale mediers rolle i moderne virksomheder.",
+    niveau: ["GF2", "HF1", "HF2"],
     varighed: "1,5 timer",
-    farve: "purple",
-    beskrivelse: "Opdater din viden om målgruppeanalyse, kanalvalg og SoMe-strategi med cases fra LEGO, Novo Nordisk og DSB.",
-    kompetencemaal: [
-      "Analysere målgrupper og vælge relevante kommunikationskanaler",
-      "Udvikle og vurdere digitale kommunikationsstrategier",
-      "Anvende sociale medier i merkantil undervisning",
-    ],
     moduler: [
-      { id: 1, titel: "Målgruppeanalyse i dag", varighed: "12 min", beskrivelse: "Sådan analyserer du målgrupper i 2025." },
-      { id: 2, titel: "Kanalvalg og SoMe-strategi", varighed: "13 min", beskrivelse: "Cases fra LEGO og Novo Nordisk om kanalvalg." },
-      { id: 3, titel: "Branding og afsenderidentitet", varighed: "11 min", beskrivelse: "Hvad er et stærkt brand og hvordan underviser du i det?" },
-      { id: 4, titel: "Afsluttende videncheck", varighed: "10 min", beskrivelse: "Quiz og kursusbevis." },
-    ],
+      { id: 1, titel: "Branding og identitet", varighed: "20 min" },
+      { id: 2, titel: "Digital kommunikation", varighed: "20 min" },
+      { id: 3, titel: "Sociale medier og strategi", varighed: "20 min" },
+      { id: 4, titel: "Afsluttende quiz", varighed: "15 min" },
+    ]
   },
-  5: {
-    id: 5,
+  "22": {
     titel: "AI i den merkantile undervisning",
-    fag: "Didaktik",
-    niveau: "Alle niveauer",
+    fag: "Didaktik / Pædagogik",
+    beskrivelse: "Forstå og anvend AI-værktøjer i din undervisning — fra ChatGPT til billedgenerering og automatisering.",
+    niveau: ["Alle niveauer"],
     varighed: "1,5 timer",
-    farve: "amber",
-    beskrivelse: "Forstå hvordan AI kan bruges i din undervisning — didaktisk forsvarligt og forankret i bekendtgørelsen.",
-    kompetencemaal: [
-      "Anvende AI-værktøjer i planlægning og gennemførelse af undervisning",
-      "Vurdere AI-genereret indhold kritisk og bekendtgørelsesforankret",
-      "Håndtere GDPR og etik i forbindelse med AI i undervisningen",
-    ],
     moduler: [
-      { id: 1, titel: "AI i undervisningen — hvad er muligt?", varighed: "12 min", beskrivelse: "Overblik over AI-værktøjer relevante for EUD merkantil." },
-      { id: 2, titel: "Prompt-kompetencer for undervisere", varighed: "13 min", beskrivelse: "Sådan bruger du Claude, ChatGPT og Copilot i din forberedelse." },
-      { id: 3, titel: "GDPR og etik med AI", varighed: "11 min", beskrivelse: "Hvad må du og hvad må du ikke — regler for AI i undervisningen." },
-      { id: 4, titel: "Afsluttende videncheck", varighed: "10 min", beskrivelse: "Quiz og kursusbevis." },
-    ],
+      { id: 1, titel: "Hvad er AI — og hvad kan det i undervisningen?", varighed: "20 min" },
+      { id: 2, titel: "ChatGPT som didaktisk redskab", varighed: "20 min" },
+      { id: 3, titel: "Billedgenerering og multimodalitet", varighed: "15 min" },
+      { id: 4, titel: "Etik, kildekritik og AI", varighed: "15 min" },
+    ]
   },
 }
 
-const farveKlasser: Record<string, { badge: string; badgeText: string; bg: string; button: string }> = {
-  blue:   { badge: "bg-blue-100",   badgeText: "text-blue-700",   bg: "bg-blue-50",   button: "bg-blue-700 hover:bg-blue-800" },
-  teal:   { badge: "bg-teal-100",   badgeText: "text-teal-700",   bg: "bg-teal-50",   button: "bg-teal-700 hover:bg-teal-800" },
-  green:  { badge: "bg-green-100",  badgeText: "text-green-700",  bg: "bg-green-50",  button: "bg-green-700 hover:bg-green-800" },
-  purple: { badge: "bg-purple-100", badgeText: "text-purple-700", bg: "bg-purple-50", button: "bg-purple-700 hover:bg-purple-800" },
-  amber:  { badge: "bg-amber-100",  badgeText: "text-amber-700",  bg: "bg-amber-50",  button: "bg-amber-700 hover:bg-amber-800" },
+const FAG_STIL: Record<string, { bg: string; tekst: string }> = {
+  'Afsætning':              { bg: '#EFF6FF', tekst: '#1E40AF' },
+  'Salg og service':        { bg: '#F0FDFA', tekst: '#0F766E' },
+  'Erhvervsøkonomi':        { bg: '#F0FDF4', tekst: '#166534' },
+  'Kommunikation':          { bg: '#F5F3FF', tekst: '#5B21B6' },
+  'Matematik':              { bg: '#FFFBEB', tekst: '#92400E' },
+  'Dansk':                  { bg: '#FFF1F2', tekst: '#9F1239' },
+  'Engelsk':                { bg: '#EFF6FF', tekst: '#1E3A8A' },
+  'Informatik':             { bg: '#ECFEFF', tekst: '#164E63' },
+  'Didaktik / Pædagogik':   { bg: '#FDF4FF', tekst: '#6B21A8' },
 }
-
-const Logo = () => (
-  <div className="flex items-center gap-2">
-    <svg width="26" height="26" viewBox="0 0 30 30" fill="none">
-      <rect width="30" height="30" rx="8" fill="#F97316"/>
-      <polygon points="15,8 24,13 15,18 6,13" fill="white"/>
-      <path d="M15 18v8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M9 15.5v6" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-      <circle cx="9" cy="22.5" r="2.2" fill="white"/>
-    </svg>
-    <h1 className="text-lg font-bold tracking-normal">
-      <span className="text-blue-900">DIDANTO</span><span style={{ marginLeft: '4px', color: '#F97316' }}>.</span>
-    </h1>
-  </div>
-)
 
 export default async function KursusPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) { redirect('/login') }
+  if (!user) redirect('/login')
 
-  const { id } = await params
-  const kursus = kurser[parseInt(id)]
-  if (!kursus) { redirect('/kurser') }
+  const navn: string = user.user_metadata?.navn || ''
+  const kursus = KURSER[id]
+  if (!kursus) redirect('/kurser')
 
-  const f = farveKlasser[kursus.farve]
-  const initialer = user.email?.slice(0, 2).toUpperCase() ?? '??'
+  const stil = FAG_STIL[kursus.fag] || { bg: '#F9FAFB', tekst: '#374151' }
+
+  const { data: fremgang } = await supabase
+    .from('kursus_fremgang')
+    .select('modul_id, gennemfoert')
+    .eq('bruger_id', user.id)
+    .eq('kursus_id', parseInt(id))
+
+  const gennemfoerteModuler = new Set(
+    (fremgang || []).filter(f => f.gennemfoert).map(f => f.modul_id)
+  )
+
+  const antalGennemfoert = gennemfoerteModuler.size
+  const procentFaerdig = Math.round((antalGennemfoert / kursus.moduler.length) * 100)
+  const naesteMod = kursus.moduler.find(m => !gennemfoerteModuler.has(m.id))
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col min-h-screen fixed top-0 left-0">
-        <div className="px-5 py-5 border-b border-gray-100">
-          <Logo />
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider">Menu</div>
-          <a href="/dashboard" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-            <span>📊</span> Oversigt
-          </a>
-          <a href="/kurser" className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium">
-            <span>🎓</span> Kurser
-          </a>
-          <a href="/kompetencer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-            <span>📜</span> Mine beviser
-          </a>
-        </nav>
-        <div className="px-3 py-4 border-t border-gray-100">
-          <div className="flex items-center gap-2.5 px-3 py-2">
-            <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-semibold text-orange-600">
-              {initialer}
-            </div>
-            <p className="text-xs text-gray-600 truncate">{user.email}</p>
-          </div>
-        </div>
-      </aside>
+    <div className="min-h-screen flex" style={{ backgroundColor: '#F9FAFB' }}>
+      <Sidebar navn={navn} email={user.email} />
 
-      <main className="flex-1 ml-56 px-8 py-8 max-w-4xl">
+      <main className="flex-1 ml-52 px-10 py-8 max-w-3xl">
+
+        {/* Breadcrumb */}
         <div className="mb-6">
-          <Link href="/kurser" className="text-sm text-gray-400 hover:text-gray-600 flex items-center gap-1">
+          <a href="/kurser"
+            style={{ fontSize: '12px', color: '#6B7280', fontFamily: 'Arial', textDecoration: 'none' }}>
             ← Tilbage til kurser
-          </Link>
-        </div>
-
-        <div className={`${f.bg} rounded-2xl p-8 mb-8`}>
-          <div className={`inline-block px-3 py-1 rounded-md text-xs font-medium ${f.badge} ${f.badgeText} mb-4`}>
-            {kursus.fag}
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">{kursus.titel}</h2>
-          <p className="text-gray-600 mb-6 leading-relaxed max-w-2xl">{kursus.beskrivelse}</p>
-          <div className="flex items-center gap-6 text-sm text-gray-500 mb-6">
-            <span>📚 {kursus.moduler.length} moduler</span>
-            <span>⏱ {kursus.varighed}</span>
-            <span>🎓 {kursus.niveau}</span>
-          </div>
-          <a href={`/kurser/${kursus.id}/modul/1`}>
-            <button className={`${f.button} text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors`}>
-              Start kursus →
-            </button>
           </a>
         </div>
 
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Kompetencemål</h3>
-          <p className="text-sm text-gray-500 mb-4">Dette kursus dækker følgende kompetencemål fra Undervisningsministeriets bekendtgørelse:</p>
-          <div className="space-y-2">
-            {kursus.kompetencemaal.map((maal, i) => (
-              <div key={i} className="flex items-start gap-3 bg-white rounded-lg border border-gray-200 p-4">
-                <span className="text-orange-500 font-bold text-sm mt-0.5">K{i + 1}</span>
-                <p className="text-sm text-gray-700">{maal}</p>
-              </div>
-            ))}
+        {/* Header */}
+        <div className="mb-7">
+          <div className="mb-2.5">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded"
+              style={{ backgroundColor: stil.bg, color: stil.tekst, fontFamily: 'Arial' }}>
+              {kursus.fag}
+            </span>
+          </div>
+          <h1 className="font-bold mb-2"
+            style={{ fontSize: '22px', color: '#111827', fontFamily: 'Arial' }}>
+            {kursus.titel}
+          </h1>
+          <p className="mb-3"
+            style={{ fontSize: '13px', color: '#6B7280', fontFamily: 'Arial', lineHeight: '1.6' }}>
+            {kursus.beskrivelse}
+          </p>
+          <div className="flex items-center gap-4">
+            <span className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+              {kursus.moduler.length} moduler
+            </span>
+            <span className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+              {kursus.varighed}
+            </span>
+            <span className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+              Niveau {kursus.niveau.join(' · ')}
+            </span>
           </div>
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Moduler</h3>
-          <div className="space-y-3">
-            {kursus.moduler.map((modul, index) => (
-              <div key={modul.id} className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-500 flex-shrink-0">
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 mb-0.5">{modul.titel}</h4>
-                  <p className="text-sm text-gray-500">{modul.beskrivelse}</p>
-                </div>
-                <span className="text-xs text-gray-400 flex-shrink-0">{modul.varighed}</span>
+        {/* Fremgangsbar */}
+        {antalGennemfoert > 0 && (
+          <div className="rounded-lg p-4 mb-6"
+            style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium" style={{ color: '#374151', fontFamily: 'Arial' }}>
+                Din fremgang
+              </p>
+              <p className="text-xs" style={{ color: '#6B7280', fontFamily: 'Arial' }}>
+                {antalGennemfoert} af {kursus.moduler.length} moduler · {procentFaerdig}%
+              </p>
+            </div>
+            <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: '#E5E7EB' }}>
+              <div className="h-1.5 rounded-full"
+                style={{ width: `${procentFaerdig}%`, backgroundColor: '#0F2A5E' }}>
               </div>
-            ))}
+            </div>
           </div>
+        )}
+
+        {/* Moduler */}
+        <p className="font-semibold mb-3"
+          style={{ fontSize: '13px', color: '#111827', fontFamily: 'Arial' }}>
+          Moduler
+        </p>
+        <div className="flex flex-col gap-2">
+          {kursus.moduler.map((modul) => {
+            const erGennemfoert = gennemfoerteModuler.has(modul.id)
+            const erNaeste = naesteMod?.id === modul.id
+            const erLaast = !erGennemfoert && !erNaeste
+
+            return (
+              <a key={modul.id}
+                href={erGennemfoert || erNaeste ? `/kurser/${id}/modul/${modul.id}` : '#'}
+                style={{ textDecoration: 'none', opacity: erLaast ? 0.4 : 1 }}>
+                <div className="rounded-lg px-5 py-3.5 flex items-center gap-3"
+                  style={{
+                    backgroundColor: 'white',
+                    border: `1px solid ${erNaeste ? '#0F2A5E' : '#E5E7EB'}`,
+                  }}>
+
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{
+                      backgroundColor: erGennemfoert ? '#EFF6FF' : erNaeste ? '#0F2A5E' : '#F3F4F6',
+                      color: erGennemfoert ? '#1D4ED8' : erNaeste ? 'white' : '#6B7280',
+                      border: erGennemfoert ? '1px solid #BFDBFE' : 'none',
+                      fontFamily: 'Arial',
+                    }}>
+                    {erGennemfoert ? '✓' : modul.id}
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="font-medium"
+                      style={{ fontSize: '13px', color: '#111827', fontFamily: 'Arial' }}>
+                      {modul.titel}
+                    </p>
+                    <p className="text-xs"
+                      style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+                      Video + quiz · {modul.varighed}
+                    </p>
+                  </div>
+
+                  <div className="flex-shrink-0">
+                    {erGennemfoert && (
+                      <span className="text-xs font-medium"
+                        style={{ color: '#1D4ED8', fontFamily: 'Arial' }}>
+                        Gennemført
+                      </span>
+                    )}
+                    {erNaeste && (
+                      <span className="text-xs font-semibold"
+                        style={{ color: '#F5C842', fontFamily: 'Arial' }}>
+                        Fortsæt →
+                      </span>
+                    )}
+                    {erLaast && (
+                      <span className="text-xs"
+                        style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+                        Låst
+                      </span>
+                    )}
+                  </div>
+
+                </div>
+              </a>
+            )
+          })}
         </div>
+
       </main>
     </div>
   )
