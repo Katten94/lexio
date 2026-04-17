@@ -3,6 +3,13 @@
 import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 
+const KURSUS_MODULER: Record<string, number> = {
+  "1": 6, "2": 5, "3": 5, "4": 5, "5": 4, "6": 4,
+  "7": 5, "8": 5, "9": 4, "10": 4, "11": 4, "12": 5,
+  "13": 5, "14": 5, "15": 4, "16": 4, "17": 5, "18": 5,
+  "19": 4, "20": 5, "21": 5, "22": 4, "23": 4, "24": 4,
+}
+
 const QUIZ_DATA: Record<string, Record<number, {
   spoergsmaal: string
   svar: string[]
@@ -155,7 +162,7 @@ const QUIZ_DATA: Record<string, Record<number, {
         spoergsmaal: "DSB bruger Instagram til at dele billeder af togrejser og natur. Hvilket formål tjener dette primært?",
         svar: ["Direkte salg af togbilletter", "Branding og at skabe positive associationer til virksomheden", "Kundeservice og klagehåndtering", "Rekruttering af nye medarbejdere"],
         korrekt: 1,
-        forklaring: "Instagram bruges primært til branding — at opbygge en positiv fortælling og skabe emotionelle associationer. DSB positionerer togrejsen som en oplevelse."
+        forklaring: "Instagram bruges primært til branding — at opbygge en positiv fortælling og skabe emotionelle associationer."
       },
       {
         spoergsmaal: "Hvad er forskellen på organisk og betalt reach på sociale medier?",
@@ -167,7 +174,7 @@ const QUIZ_DATA: Record<string, Record<number, {
         spoergsmaal: "Novo Nordisk publicerer regelmæssigt videnskabelige artikler og rapporter om diabetes. Hvilken strategi er dette et eksempel på?",
         svar: ["Viral marketing", "Influencer marketing", "Thought leadership og content marketing", "Search Engine Marketing (SEM)"],
         korrekt: 2,
-        forklaring: "Thought leadership er en content marketing-strategi hvor virksomheden positionerer sig som ekspert ved at dele viden og indsigt. Det opbygger troværdighed og tillid."
+        forklaring: "Thought leadership er en content marketing-strategi hvor virksomheden positionerer sig som ekspert ved at dele viden og indsigt."
       },
     ],
     6: [
@@ -229,6 +236,8 @@ export default function ModulPage({
   const modulId = parseInt(modulIdStr)
   const router = useRouter()
 
+  const totalModuler = KURSUS_MODULER[kursusId] || 6
+  const erSidsteModul = modulId === totalModuler
   const quiz = QUIZ_DATA[kursusId]?.[modulId] || []
 
   const [fase, setFase] = useState<'video' | 'quiz' | 'resultat'>('video')
@@ -412,9 +421,13 @@ export default function ModulPage({
             </div>
             {bestaaet ? (
               <div className="space-y-3">
-                <button onClick={() => router.push(`/kurser/${kursusId}/modul/${modulId + 1}`)}
+                <button
+                  onClick={() => erSidsteModul
+                    ? router.push(`/kurser/${kursusId}/gennemfoert`)
+                    : router.push(`/kurser/${kursusId}/modul/${modulId + 1}`)
+                  }
                   className="w-full bg-blue-900 text-white py-3 rounded-xl font-medium hover:bg-blue-800">
-                  Næste modul →
+                  {erSidsteModul ? 'Fuldfør kursus 🎉' : 'Næste modul →'}
                 </button>
                 <button onClick={() => router.push(`/kurser/${kursusId}`)}
                   className="w-full border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50">
