@@ -3,305 +3,305 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 
-const FAG_MED_NIVEAUER: Record<string, string[]> = {
-  "Afsætning": ["A", "B", "C"],
-  "Salg og service": ["GF2", "HF1", "HF2"],
-  "Erhvervsøkonomi": ["A", "B", "C"],
-  "Kommunikation": ["GF2", "HF1", "HF2"],
-  "Informatik": ["A", "B", "C"],
-  "Matematik": ["F", "E", "D", "C", "B"],
-  "Dansk": ["F", "E", "D", "C"],
-  "Engelsk": ["F", "E", "D", "C", "B"],
-  "Virksomhedsøkonomi": ["A", "B", "C"],
-  "International handel": ["A", "B"],
-  "Logistik": ["GF2", "HF1", "HF2"],
-  "Iværksætteri": ["A", "B", "C"],
-  "Didaktik / Pædagogik": ["Alle niveauer"],
-  "Samfundsfag": ["C", "B", "A"],
-  "Naturfag": ["F", "E", "D", "C"],
+const ALLE_FAG: Record<string, string[]> = {
+  'Afsætning':              ['A', 'B', 'C'],
+  'Salg og service':        ['GF1', 'GF2', 'HF1', 'HF2'],
+  'Erhvervsøkonomi':        ['A', 'B', 'C'],
+  'Kommunikation':          ['GF1', 'GF2', 'HF1', 'HF2'],
+  'Matematik':              ['B', 'C', 'D', 'E', 'F'],
+  'Dansk':                  ['C', 'D', 'E'],
+  'Engelsk':                ['B', 'C', 'D', 'E'],
+  'Informatik':             ['A', 'B', 'C'],
+  'Didaktik / Pædagogik':   ['Alle niveauer'],
 }
 
-const FORLOEB = [
-  { id: "gf1", label: "GF1", beskrivelse: "Grundforløb 1 — fælles for alle EUD-elever" },
-  { id: "gf2", label: "GF2", beskrivelse: "Grundforløb 2 — retningsspecifikt" },
-  { id: "hf1", label: "HF1", beskrivelse: "Hovedforløb 1" },
-  { id: "hf2", label: "HF2", beskrivelse: "Hovedforløb 2" },
-  { id: "hf3", label: "HF3", beskrivelse: "Hovedforløb 3" },
-  { id: "hf4", label: "HF4", beskrivelse: "Hovedforløb 4" },
-]
+const ALLE_FORLOEB = ['GF1', 'GF2', 'HF1', 'HF2', 'HF3', 'HF4']
 
-type FagProfil = Record<string, string[]>
+const FAG_STIL: Record<string, { bg: string; tekst: string }> = {
+  'Afsætning':              { bg: '#EFF6FF', tekst: '#1E40AF' },
+  'Salg og service':        { bg: '#F0FDFA', tekst: '#0F766E' },
+  'Erhvervsøkonomi':        { bg: '#F0FDF4', tekst: '#166534' },
+  'Kommunikation':          { bg: '#F5F3FF', tekst: '#5B21B6' },
+  'Matematik':              { bg: '#FFFBEB', tekst: '#92400E' },
+  'Dansk':                  { bg: '#FFF1F2', tekst: '#9F1239' },
+  'Engelsk':                { bg: '#EFF6FF', tekst: '#1E3A8A' },
+  'Informatik':             { bg: '#ECFEFF', tekst: '#164E63' },
+  'Didaktik / Pædagogik':   { bg: '#FDF4FF', tekst: '#6B21A8' },
+}
+
+const Logo = () => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <svg width="38" height="38" viewBox="0 0 80 80" fill="none" style={{ flexShrink: 0 }}>
+      <rect width="80" height="80" rx="18" fill="rgba(255,255,255,0.1)"/>
+      <circle cx="40" cy="26" r="11" fill="white"/>
+      <circle cx="40" cy="26" r="5.5" fill="#F5C842"/>
+      <path d="M18 68 Q18 50 40 50 Q62 50 62 68" fill="white"/>
+    </svg>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div style={{ fontFamily: "'Arial Black', Arial", fontSize: '14px', fontWeight: 900, color: 'white', letterSpacing: '-0.5px', lineHeight: '1' }}>
+        DIDANTO
+      </div>
+      <div style={{ fontFamily: 'Arial', fontSize: '6.5px', color: 'rgba(255,255,255,0.3)', letterSpacing: '1.5px', textTransform: 'uppercase', lineHeight: '1.4' }}>
+        Kompetenceløft<br />til undervisere
+      </div>
+    </div>
+  </div>
+)
 
 export default function SignupPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [navn, setNavn] = useState('')
-  const [skole, setSkole] = useState('')
-  const [valgtefag, setValgtefag] = useState<string[]>([])
-  const [fagprofil, setFagprofil] = useState<FagProfil>({})
-  const [valgtforloeb, setValgtforloeb] = useState<string[]>([])
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [trin, setTrin] = useState(1)
   const router = useRouter()
   const supabase = createClient()
 
-  const toggleFag = (fag: string) => {
-    setValgtefag(prev =>
-      prev.includes(fag) ? prev.filter(f => f !== fag) : [...prev, fag]
-    )
-    setFagprofil(prev => {
-      const updated = { ...prev }
-      if (updated[fag]) delete updated[fag]
-      return updated
-    })
-  }
+  const [trin, setTrin] = useState(1)
+  const [navn, setNavn] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fagprofil, setFagprofil] = useState<Record<string, string[]>>({})
+  const [forloeb, setForloeb] = useState<string[]>([])
+  const [fejl, setFejl] = useState('')
+  const [loader, setLoader] = useState(false)
 
   const toggleNiveau = (fag: string, niveau: string) => {
     setFagprofil(prev => {
-      const nuvaerende = prev[fag] || []
-      const opdateret = nuvaerende.includes(niveau)
-        ? nuvaerende.filter(n => n !== niveau)
-        : [...nuvaerende, niveau]
-      return { ...prev, [fag]: opdateret }
+      const nuv = prev[fag] || []
+      const ny = nuv.includes(niveau) ? nuv.filter(n => n !== niveau) : [...nuv, niveau]
+      if (ny.length === 0) { const { [fag]: _, ...rest } = prev; return rest }
+      return { ...prev, [fag]: ny }
     })
   }
 
-  const toggleForloeb = (id: string) => {
-    setValgtforloeb(prev =>
-      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
-    )
+  const toggleForloeb = (f: string) => {
+    setForloeb(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])
   }
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (valgtforloeb.length === 0) {
-      setError('Vælg mindst ét forløb.')
-      return
-    }
-    setLoading(true)
-    setError('')
-
+  const opret = async () => {
+    setLoader(true)
+    setFejl('')
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { navn, skole, fagprofil, forloeb: valgtforloeb }
-      }
+      email, password,
+      options: { data: { navn, fagprofil, forloeb } }
     })
-
     if (error) {
-      setError('Der skete en fejl. Prøv igen.')
-      setLoading(false)
-      return
+      setFejl(error.message)
+      setLoader(false)
+    } else {
+      router.push('/dashboard')
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
-  const TrinIndikator = () => (
-    <div className="flex items-center gap-1 mb-6">
-      {[1, 2, 3, 4].map((t, i) => (
-        <div key={t} className="flex items-center flex-1">
-          <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold flex-shrink-0 ${
-            trin > t ? 'bg-orange-400 text-white' :
-            trin === t ? 'bg-blue-900 text-white' :
-            'bg-gray-100 text-gray-400'
-          }`}>
-            {trin > t ? '✓' : t}
-          </div>
-          {i < 3 && (
-            <div className="flex-1 h-0.5 bg-gray-200 mx-1">
-              <div className={`h-0.5 bg-blue-900 transition-all ${trin > t ? 'w-full' : 'w-0'}`}></div>
-            </div>
-          )}
-        </div>
-      ))}
+  const Trin = ({ nr, label, aktiv, faerdig }: { nr: number; label: string; aktiv: boolean; faerdig: boolean }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{
+        width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0,
+        backgroundColor: faerdig ? '#F5C842' : aktiv ? 'white' : 'rgba(255,255,255,0.2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{ fontSize: '10px', fontWeight: '700', color: faerdig ? '#0F2A5E' : aktiv ? '#0F2A5E' : 'rgba(255,255,255,0.5)' }}>
+          {faerdig ? '✓' : nr}
+        </span>
+      </div>
+      <span style={{ fontSize: '12px', fontFamily: 'Arial', color: aktiv ? 'white' : 'rgba(255,255,255,0.4)', fontWeight: aktiv ? '600' : '400' }}>
+        {label}
+      </span>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-10">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-lg">
+    <div className="min-h-screen flex" style={{ backgroundColor: '#F9FAFB' }}>
 
-        <div className="mb-6">
-          <div className="flex items-center gap-2.5 mb-1">
-            <svg width="32" height="32" viewBox="0 0 30 30" fill="none">
-              <rect width="30" height="30" rx="8" fill="#F97316"/>
-              <polygon points="15,8 24,13 15,18 6,13" fill="white"/>
-              <path d="M15 18v8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M9 15.5v6" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-              <circle cx="9" cy="22.5" r="2.2" fill="white"/>
-            </svg>
-            <h1 className="text-2xl font-bold tracking-normal">
-              <span className="text-blue-900">DIDANTO</span><span style={{ marginLeft: '6px', color: '#F97316' }}>.</span>
-            </h1>
+      {/* Venstre — navy panel */}
+      <div className="hidden lg:flex flex-col w-2/5 px-12"
+        style={{ backgroundColor: '#0F2A5E', paddingTop: '40px' }}>
+
+        <Logo />
+
+        <div style={{ marginTop: '80px' }}>
+          <p style={{ fontFamily: 'Arial', fontSize: '13px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '20px' }}>
+            Opret din konto
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <Trin nr={1} label="Dine oplysninger" aktiv={trin === 1} faerdig={trin > 1} />
+            <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.15)', marginLeft: '11px' }} />
+            <Trin nr={2} label="Dine fag og niveauer" aktiv={trin === 2} faerdig={trin > 2} />
+            <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.15)', marginLeft: '11px' }} />
+            <Trin nr={3} label="Dine forløb" aktiv={trin === 3} faerdig={trin > 3} />
+            <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.15)', marginLeft: '11px' }} />
+            <Trin nr={4} label="Bekræft og opret" aktiv={trin === 4} faerdig={false} />
           </div>
-          <p className="text-gray-500 mt-2">Opret din konto</p>
         </div>
-
-        <TrinIndikator />
-
-        {/* TRIN 1 — Oplysninger */}
-        {trin === 1 && (
-          <form onSubmit={(e) => { e.preventDefault(); setTrin(2) }} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Navn</label>
-              <input type="text" value={navn} onChange={(e) => setNavn(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Dit fulde navn" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Skole</label>
-              <input type="text" value={skole} onChange={(e) => setSkole(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Navn på din erhvervsskole" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="din@email.dk" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Adgangskode</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Minimum 6 tegn" required minLength={6} />
-            </div>
-            <button type="submit"
-              className="w-full bg-blue-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-800">
-              Næste →
-            </button>
-          </form>
-        )}
-
-        {/* TRIN 2 — Vælg fag */}
-        {trin === 2 && (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">Hvilke fag underviser du i?</p>
-              <p className="text-xs text-gray-400 mb-3">Vælg alle relevante fag — du kan altid ændre det senere i din profil.</p>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.keys(FAG_MED_NIVEAUER).map((fag) => (
-                  <button key={fag} type="button" onClick={() => toggleFag(fag)}
-                    className={`text-left px-3 py-2 rounded-lg text-xs border transition-all ${
-                      valgtefag.includes(fag)
-                        ? 'bg-blue-900 text-white border-blue-900'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
-                    }`}>
-                    {fag}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <div className="flex gap-2">
-              <button type="button" onClick={() => { setError(''); setTrin(1) }}
-                className="flex-1 border border-gray-200 text-gray-600 rounded-lg py-2 text-sm font-medium hover:bg-gray-50">
-                ← Tilbage
-              </button>
-              <button type="button" onClick={() => {
-                if (valgtefag.length === 0) { setError('Vælg mindst ét fag.'); return }
-                setError(''); setTrin(3)
-              }}
-                className="flex-1 bg-blue-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-800">
-                Næste →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* TRIN 3 — Vælg niveauer */}
-        {trin === 3 && (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">Hvilke niveauer underviser du på?</p>
-              <p className="text-xs text-gray-400 mb-4">Vælg alle niveauer for hvert fag.</p>
-              <div className="space-y-3">
-                {valgtefag.map((fag) => (
-                  <div key={fag} className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-sm font-medium text-gray-800 mb-2">{fag}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {FAG_MED_NIVEAUER[fag].map((niveau) => (
-                        <button key={niveau} type="button" onClick={() => toggleNiveau(fag, niveau)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                            (fagprofil[fag] || []).includes(niveau)
-                              ? 'bg-orange-400 text-white border-orange-400'
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300'
-                          }`}>
-                          {niveau}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <div className="flex gap-2">
-              <button type="button" onClick={() => { setError(''); setTrin(2) }}
-                className="flex-1 border border-gray-200 text-gray-600 rounded-lg py-2 text-sm font-medium hover:bg-gray-50">
-                ← Tilbage
-              </button>
-              <button type="button" onClick={() => {
-                const harNiveauer = valgtefag.every(fag => (fagprofil[fag] || []).length > 0)
-                if (!harNiveauer) { setError('Vælg mindst ét niveau for hvert fag.'); return }
-                setError(''); setTrin(4)
-              }}
-                className="flex-1 bg-blue-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-800">
-                Næste →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* TRIN 4 — Vælg forløb */}
-        {trin === 4 && (
-          <form onSubmit={handleSignup} className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">Hvilke forløb underviser du på?</p>
-              <p className="text-xs text-gray-400 mb-4">Vælg alle forløb der er relevante for dig — du modtager kun kurser og materialer der passer til dit undervisningsforløb.</p>
-              <div className="space-y-2">
-                {FORLOEB.map((forloeb) => (
-                  <button key={forloeb.id} type="button" onClick={() => toggleForloeb(forloeb.id)}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
-                      valgtforloeb.includes(forloeb.id)
-                        ? 'bg-blue-900 text-white border-blue-900'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
-                    }`}>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{forloeb.label}</span>
-                      <span className={`text-xs ${valgtforloeb.includes(forloeb.id) ? 'text-blue-200' : 'text-gray-400'}`}>
-                        {forloeb.beskrivelse}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <div className="flex gap-2">
-              <button type="button" onClick={() => { setError(''); setTrin(3) }}
-                className="flex-1 border border-gray-200 text-gray-600 rounded-lg py-2 text-sm font-medium hover:bg-gray-50">
-                ← Tilbage
-              </button>
-              <button type="submit" disabled={loading}
-                className="flex-1 bg-blue-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-800 disabled:opacity-50">
-                {loading ? 'Opretter...' : 'Opret konto ✓'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Har du allerede en konto?{' '}
-          <Link href="/login" className="text-orange-500 hover:underline">Log ind</Link>
-        </p>
       </div>
+
+      {/* Højre — formular centreret i det lyse felt */}
+      <div className="flex-1 flex flex-col items-center"
+        style={{ paddingTop: '40px' }}>
+
+        <div style={{ height: '118px', flexShrink: 0 }} />
+
+        <div style={{ width: '360px' }}>
+
+          {trin === 1 && (
+            <div>
+              <h1 className="font-bold mb-1" style={{ fontSize: '22px', color: '#111827', fontFamily: 'Arial' }}>Opret din konto</h1>
+              <p className="mb-8" style={{ fontSize: '13px', color: '#6B7280', fontFamily: 'Arial' }}>Trin 1 af 4 — dine oplysninger</p>
+              <div className="mb-4">
+                <label className="block mb-1.5" style={{ fontSize: '12px', fontWeight: '600', color: '#374151', fontFamily: 'Arial' }}>Fulde navn</label>
+                <input type="text" value={navn} onChange={e => setNavn(e.target.value)}
+                  placeholder="Dit navn" className="w-full px-4 py-2.5 rounded-lg outline-none"
+                  style={{ border: '1px solid #E5E7EB', fontSize: '13px', fontFamily: 'Arial', color: '#111827', backgroundColor: 'white' }}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1.5" style={{ fontSize: '12px', fontWeight: '600', color: '#374151', fontFamily: 'Arial' }}>Email</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="din@skole.dk" className="w-full px-4 py-2.5 rounded-lg outline-none"
+                  style={{ border: '1px solid #E5E7EB', fontSize: '13px', fontFamily: 'Arial', color: '#111827', backgroundColor: 'white' }}
+                />
+              </div>
+              <div className="mb-8">
+                <label className="block mb-1.5" style={{ fontSize: '12px', fontWeight: '600', color: '#374151', fontFamily: 'Arial' }}>Adgangskode</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="Mindst 6 tegn" className="w-full px-4 py-2.5 rounded-lg outline-none"
+                  style={{ border: '1px solid #E5E7EB', fontSize: '13px', fontFamily: 'Arial', color: '#111827', backgroundColor: 'white' }}
+                />
+              </div>
+              <button onClick={() => { if (navn && email && password.length >= 6) setTrin(2) }}
+                disabled={!navn || !email || password.length < 6}
+                className="w-full py-2.5 rounded-lg font-medium mb-4"
+                style={{
+                  backgroundColor: navn && email && password.length >= 6 ? '#0F2A5E' : '#E5E7EB',
+                  color: navn && email && password.length >= 6 ? 'white' : '#9CA3AF',
+                  fontSize: '14px', fontFamily: 'Arial',
+                  cursor: navn && email && password.length >= 6 ? 'pointer' : 'not-allowed',
+                }}>
+                Fortsæt →
+              </button>
+              <p className="text-center" style={{ fontSize: '13px', color: '#6B7280', fontFamily: 'Arial' }}>
+                Har du allerede en konto?{' '}
+                <a href="/login" style={{ color: '#0F2A5E', fontWeight: '600', textDecoration: 'none' }}>Log ind</a>
+              </p>
+            </div>
+          )}
+
+          {trin === 2 && (
+            <div>
+              <h1 className="font-bold mb-1" style={{ fontSize: '22px', color: '#111827', fontFamily: 'Arial' }}>Dine fag og niveauer</h1>
+              <p className="mb-6" style={{ fontSize: '13px', color: '#6B7280', fontFamily: 'Arial' }}>Trin 2 af 4 — vælg de fag du underviser i og på hvilke niveauer</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+                {Object.entries(ALLE_FAG).map(([fag, niveauer]) => {
+                  const stil = FAG_STIL[fag] || { bg: '#F9FAFB', tekst: '#374151' }
+                  const valgte = fagprofil[fag] || []
+                  return (
+                    <div key={fag}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: '#374151', fontFamily: 'Arial' }}>{fag}</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {niveauer.map(niveau => {
+                          const valgt = valgte.includes(niveau)
+                          return (
+                            <button key={niveau} onClick={() => toggleNiveau(fag, niveau)}
+                              className="text-xs font-medium px-3 py-1 rounded"
+                              style={{ backgroundColor: valgt ? stil.tekst : stil.bg, color: valgt ? 'white' : stil.tekst, border: `1px solid ${stil.tekst}`, fontFamily: 'Arial', cursor: 'pointer' }}>
+                              {niveau}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => setTrin(1)} className="flex-1 py-2.5 rounded-lg font-medium"
+                  style={{ backgroundColor: 'white', border: '1px solid #E5E7EB', color: '#374151', fontSize: '14px', fontFamily: 'Arial' }}>← Tilbage</button>
+                <button onClick={() => setTrin(3)} className="flex-1 py-2.5 rounded-lg font-medium"
+                  style={{ backgroundColor: '#0F2A5E', color: 'white', fontSize: '14px', fontFamily: 'Arial', cursor: 'pointer' }}>Fortsæt →</button>
+              </div>
+            </div>
+          )}
+
+          {trin === 3 && (
+            <div>
+              <h1 className="font-bold mb-1" style={{ fontSize: '22px', color: '#111827', fontFamily: 'Arial' }}>Dine forløb</h1>
+              <p className="mb-6" style={{ fontSize: '13px', color: '#6B7280', fontFamily: 'Arial' }}>Trin 3 af 4 — hvilke forløb underviser du på?</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '32px' }}>
+                {ALLE_FORLOEB.map(f => {
+                  const valgt = forloeb.includes(f)
+                  return (
+                    <button key={f} onClick={() => toggleForloeb(f)}
+                      className="font-medium px-5 py-2.5 rounded-lg"
+                      style={{ backgroundColor: valgt ? '#0F2A5E' : 'white', color: valgt ? 'white' : '#374151', border: `1px solid ${valgt ? '#0F2A5E' : '#E5E7EB'}`, fontSize: '13px', fontFamily: 'Arial', cursor: 'pointer' }}>
+                      {f}
+                    </button>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => setTrin(2)} className="flex-1 py-2.5 rounded-lg font-medium"
+                  style={{ backgroundColor: 'white', border: '1px solid #E5E7EB', color: '#374151', fontSize: '14px', fontFamily: 'Arial' }}>← Tilbage</button>
+                <button onClick={() => setTrin(4)} className="flex-1 py-2.5 rounded-lg font-medium"
+                  style={{ backgroundColor: '#0F2A5E', color: 'white', fontSize: '14px', fontFamily: 'Arial', cursor: 'pointer' }}>Fortsæt →</button>
+              </div>
+            </div>
+          )}
+
+          {trin === 4 && (
+            <div>
+              <h1 className="font-bold mb-1" style={{ fontSize: '22px', color: '#111827', fontFamily: 'Arial' }}>Bekræft og opret</h1>
+              <p className="mb-6" style={{ fontSize: '13px', color: '#6B7280', fontFamily: 'Arial' }}>Trin 4 af 4 — tjek dine oplysninger og opret din konto</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+                  <p className="text-xs mb-0.5" style={{ color: '#9CA3AF', fontFamily: 'Arial', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Navn</p>
+                  <p className="text-sm font-medium" style={{ color: '#111827', fontFamily: 'Arial' }}>{navn}</p>
+                </div>
+                <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+                  <p className="text-xs mb-0.5" style={{ color: '#9CA3AF', fontFamily: 'Arial', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email</p>
+                  <p className="text-sm font-medium" style={{ color: '#111827', fontFamily: 'Arial' }}>{email}</p>
+                </div>
+                <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+                  <p className="text-xs mb-2" style={{ color: '#9CA3AF', fontFamily: 'Arial', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fag og niveauer</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {Object.entries(fagprofil).length === 0 ? (
+                      <p className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>Ingen valgt</p>
+                    ) : Object.entries(fagprofil).map(([fag, niv]) => {
+                      const stil = FAG_STIL[fag] || { bg: '#F9FAFB', tekst: '#374151' }
+                      return niv.map(n => (
+                        <span key={`${fag}-${n}`} className="text-xs px-2 py-0.5 rounded"
+                          style={{ backgroundColor: stil.bg, color: stil.tekst, fontFamily: 'Arial' }}>{fag} {n}</span>
+                      ))
+                    })}
+                  </div>
+                </div>
+                <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+                  <p className="text-xs mb-2" style={{ color: '#9CA3AF', fontFamily: 'Arial', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Forløb</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {forloeb.length === 0 ? (
+                      <p className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>Ingen valgt</p>
+                    ) : forloeb.map(f => (
+                      <span key={f} className="text-xs px-2 py-0.5 rounded"
+                        style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB', color: '#374151', fontFamily: 'Arial' }}>{f}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {fejl && (
+                <div className="mb-4 px-4 py-3 rounded-lg" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA' }}>
+                  <p className="text-xs" style={{ color: '#991B1B', fontFamily: 'Arial' }}>{fejl}</p>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => setTrin(3)} className="flex-1 py-2.5 rounded-lg font-medium"
+                  style={{ backgroundColor: 'white', border: '1px solid #E5E7EB', color: '#374151', fontSize: '14px', fontFamily: 'Arial' }}>← Tilbage</button>
+                <button onClick={opret} disabled={loader} className="flex-1 py-2.5 rounded-lg font-medium"
+                  style={{ backgroundColor: '#0F2A5E', color: 'white', fontSize: '14px', fontFamily: 'Arial', cursor: loader ? 'not-allowed' : 'pointer' }}>
+                  {loader ? 'Opretter...' : 'Opret konto'}
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+
     </div>
   )
 }

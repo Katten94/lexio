@@ -10,19 +10,19 @@ const navItems = [
 ]
 
 const Logo = () => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-    <svg width="38" height="38" viewBox="0 0 80 80" fill="none" style={{ flexShrink: 0, marginTop: '-1px' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <svg width="38" height="38" viewBox="0 0 80 80" fill="none" style={{ flexShrink: 0 }}>
       <rect width="80" height="80" rx="18" fill="rgba(255,255,255,0.1)"/>
       <circle cx="40" cy="26" r="11" fill="white"/>
       <circle cx="40" cy="26" r="5.5" fill="#F5C842"/>
       <path d="M18 68 Q18 50 40 50 Q62 50 62 68" fill="white"/>
     </svg>
-    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '38px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       <div style={{ fontFamily: "'Arial Black', Arial", fontSize: '14px', fontWeight: 900, color: 'white', letterSpacing: '-0.5px', lineHeight: '1' }}>
         DIDANTO
       </div>
-      <div style={{ fontFamily: 'Arial', fontSize: '6.5px', color: 'rgba(255,255,255,0.3)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-        Kompetenceløft til undervisere
+      <div style={{ fontFamily: 'Arial', fontSize: '6.5px', color: 'rgba(255,255,255,0.3)', letterSpacing: '1.5px', textTransform: 'uppercase', lineHeight: '1.4' }}>
+        Kompetenceløft<br />til undervisere
       </div>
     </div>
   </div>
