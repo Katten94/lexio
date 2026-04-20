@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 
@@ -36,8 +36,10 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
   const [fejlBesked, setFejlBesked] = useState('')
   const [pptxData, setPptxData] = useState<{ base64: string; filnavn: string } | null>(null)
   const [docxData, setDocxData] = useState<{ base64: string; filnavn: string } | null>(null)
+  const [xlsxData, setXlsxData] = useState<{ base64: string; filnavn: string } | null>(null)
   const [dlPptx, setDlPptx] = useState(false)
   const [dlDocx, setDlDocx] = useState(false)
+  const [dlXlsx, setDlXlsx] = useState(false)
 
   const generer = async () => {
     setStatus('loading')
@@ -53,6 +55,7 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
       if (data.success && data.pptx && data.docx) {
         setPptxData(data.pptx)
         setDocxData(data.docx)
+        if (data.xlsx) setXlsxData(data.xlsx)
         setStatus('klar')
       } else {
         setFejlBesked(data.error || 'Uventet svar fra serveren')
@@ -64,7 +67,7 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  useEffect(() => { generer() }, [kursusId])
+  useState(() => { generer() })
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: '#F9FAFB' }}>
@@ -72,7 +75,7 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
 
       <main className="flex-1 ml-52 px-10 py-8 max-w-3xl">
 
-        {/* Tillykke boks */}
+        {/* Tillykke */}
         <div className="rounded-lg p-8 mb-6 text-center"
           style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0' }}>
           <div className="text-4xl mb-4">🎉</div>
@@ -91,7 +94,7 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
         </div>
 
         {/* Materialer */}
-        <p className="font-semibold mb-3"
+        <p className="font-semibold mb-2"
           style={{ fontSize: '13px', color: '#111827', fontFamily: 'Arial' }}>
           Din undervisningsmaterialepakke
         </p>
@@ -105,8 +108,11 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
             style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
             <div className="w-8 h-8 border-4 border-gray-200 rounded-full animate-spin mx-auto mb-3"
               style={{ borderTopColor: '#0F2A5E' }}></div>
-            <p className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+            <p className="text-xs mb-1" style={{ color: '#374151', fontFamily: 'Arial', fontWeight: '600' }}>
               Sammensætter dine undervisningsmaterialer...
+            </p>
+            <p className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+              Claude analyserer bekendtgørelsen og genererer indhold. Dette tager ca. 30 sekunder.
             </p>
           </div>
         )}
@@ -129,6 +135,7 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
         {status === 'klar' && pptxData && docxData && (
           <div className="flex flex-col gap-2">
 
+            {/* PowerPoint */}
             <div className="rounded-lg px-5 py-4 flex items-center justify-between"
               style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
               <div className="flex-1">
@@ -137,7 +144,7 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
                   📊 Præsentation til eleverne
                 </p>
                 <p className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
-                  13 slides · Alle modeller visuelt forklaret · Case gennemgående
+                  13 slides · Alle modeller · Case gennemgående
                 </p>
               </div>
               <button
@@ -153,6 +160,7 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
               </button>
             </div>
 
+            {/* Word */}
             <div className="rounded-lg px-5 py-4 flex items-center justify-between"
               style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
               <div className="flex-1">
@@ -176,6 +184,33 @@ export default function GennemfoertPage({ params }: { params: Promise<{ id: stri
                 {dlDocx ? 'Downloader...' : '⬇ Download .docx'}
               </button>
             </div>
+
+            {/* Excel — kun hvis relevant */}
+            {xlsxData && (
+              <div className="rounded-lg px-5 py-4 flex items-center justify-between"
+                style={{ backgroundColor: 'white', border: '1px solid #E5E7EB' }}>
+                <div className="flex-1">
+                  <p className="font-medium mb-0.5"
+                    style={{ fontSize: '13px', color: '#111827', fontFamily: 'Arial' }}>
+                    📈 Datasæt til undervisningsopgave
+                  </p>
+                  <p className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Arial' }}>
+                    Excel-ark med casedata · Klar til elevbrug
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setDlXlsx(true)
+                    downloadFil(xlsxData.base64, xlsxData.filnavn, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                    setTimeout(() => setDlXlsx(false), 2000)
+                  }}
+                  disabled={dlXlsx}
+                  className="text-xs font-medium px-4 py-2 rounded-md flex-shrink-0 ml-4"
+                  style={{ backgroundColor: '#166534', color: 'white', fontFamily: 'Arial' }}>
+                  {dlXlsx ? 'Downloader...' : '⬇ Download .xlsx'}
+                </button>
+              </div>
+            )}
 
           </div>
         )}
